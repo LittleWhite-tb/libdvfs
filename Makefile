@@ -41,6 +41,10 @@ doc:
 
 install:
 	/usr/bin/install -m 0755 libdvfs.so /usr/local/lib
+	mkdir -p /usr/local/include/libdvfs
+	/usr/bin/install -m 0655 core.h /usr/local/include/libdvfs
+	/usr/bin/install -m 0655 cpu.h /usr/local/include/libdvfs
+	/usr/bin/install -m 0655 libdvfs.h /usr/local/include/libdvfs
 
 clean:
 	rm -f *.o
