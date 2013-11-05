@@ -15,21 +15,21 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 CC?=gcc
-CFLAGS=-O3 -g -Wall -Wextra
+CFLAGS=-O3 -g -Wall -Wextra -fPIC
 
-all: libdvfs.a
+all: libdvfs.so
 
-.PHONY:all clean distclean
+.PHONY:all clean distclean install
 
-libdvfs.a: core.o cpu.o
-	ar rcs $@ $^
+libdvfs.so: core.o cpu.o
+	$(CC) -shared $(CFLAGS) $^ -o $@
 
 test: test_core test_cpu
 
-test_core: test_core.o libdvfs.a
+test_core: test_core.o libdvfs.so
 	$(CC) $(CFLAGS) $^ -o $@
 	
-test_cpu: test_cpu.o libdvfs.a
+test_cpu: test_cpu.o libdvfs.so
 	$(CC) $(CFLAGS) $^ -o $@
 	
 
@@ -39,10 +39,13 @@ test_cpu: test_cpu.o libdvfs.a
 doc:
 	doxygen libdvfs.doxy
 
+install:
+	/usr/bin/install -m 0755 libdvfs.so /usr/local/lib
+
 clean:
 	rm -f *.o
 
 distclean: clean
-	rm -f *.a
+	rm -f *.so
 	rm -f test
 	rm -r ./doc
