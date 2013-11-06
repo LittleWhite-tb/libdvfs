@@ -40,8 +40,7 @@
  * of error. The error cases are often related to file opening (like permission denied). An error message will be written
  * on stderr (using fprintf or perror).
  *
- * @see sched_getcpu
- * @sa dvfs_closeContext
+ * @sa core_closeContext
  */
 core_ctx_t *core_openContext(unsigned int cpuId) {
    char fname [256];
