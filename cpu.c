@@ -31,10 +31,11 @@
  * Opens the CPU context. This open a Core Context for all core available
  *
  * @returns an instanciated CPU context. May return NULL in case
- * of error.
+ * of error. The error cases are often related to file opening (like permission denied). An error message will be written
+ * on stderr (using fprintf or perror).
  *
  * @see sched_getcpu
- * @sa cpu_closeContext
+ * @sa cpu_closeContext core_openContext
  */
 cpu_ctx_t *cpu_openContext()
 {

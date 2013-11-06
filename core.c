@@ -37,7 +37,8 @@
  *
  * @param cpuId The id of the desired core.
  * @returns an instanciated Core context for this core. May return NULL in case
- * of error.
+ * of error. The error cases are often related to file opening (like permission denied). An error message will be written
+ * on stderr (using fprintf or perror).
  *
  * @see sched_getcpu
  * @sa dvfs_closeContext
