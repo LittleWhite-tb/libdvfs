@@ -19,7 +19,7 @@ CFLAGS=-O3 -g -Wall -Wextra -fPIC
 
 all: libdvfs.so
 
-.PHONY:all clean distclean install
+.PHONY: all clean distclean install uninstall test doc
 
 libdvfs.so: core.o cpu.o
 	$(CC) -shared $(CFLAGS) $^ -o $@
