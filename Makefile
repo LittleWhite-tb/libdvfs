@@ -46,6 +46,10 @@ install:
 	/usr/bin/install -m 0655 cpu.h /usr/local/include/libdvfs
 	/usr/bin/install -m 0655 libdvfs.h /usr/local/include/libdvfs
 
+uninstall:
+	rm -f /usr/local/lib/libdvfs.so
+	rm -rf /usr/local/include/libdvfs
+
 clean:
 	rm -f *.o
 
