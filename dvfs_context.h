@@ -16,17 +16,29 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#pragma once
+
 #include <stdbool.h>
 
 #include "dvfs_unit.h"
+#include "core.h"
 
-#pragma once
+
+/**
+ * @file dvfs_context.h
+ *
+ * Describes all the structures and functions related to the whole DVFS
+ * context (the whole system). This is the entry point of the library.
+ *
+ * @sa dvfs_unit
+ */
+
 
 /**
  * DVFS Context. Entry point for the library. Stores all the references to the 
  * DVFS units available on the system.
  * 
- * \sa dvfs_unit()
+ * @sa dvfs_unit()
  */
 typedef struct {
    unsigned int nb_units;  //!< Number of DVFS units on the system
@@ -39,7 +51,7 @@ typedef struct {
  * @return A new DVFS context used in the various functions or NULL in case of
  * error.
  *
- * \sa dvfs_stop()
+ * @sa dvfs_stop()
  */
 dvfs_ctx *dvfs_start();
 
@@ -61,16 +73,37 @@ bool dvfs_has_TB();
 /**
  * Sets the provided governor on all the DVFS units.
  *
- * @param dvfs The DVFS context as provided by dvfs_start
+ * @param ctx The DVFS context as provided by dvfs_start
  * @param gov The new governor to set
  */
-void dvfs_set_gov(const dvfs_ctx *dvfs, const char *gov);
+void dvfs_set_gov(const dvfs_ctx *ctx, const char *gov);
 
 /**
  * Sets the given frequency on all the DVFS units. The effects are unknown if
  * the current governor is not "userspace".
  *
- * @param dvfs The DVFS context as provided by dvfs_start
+ * @param ctx The DVFS context as provided by dvfs_start()
  * @param freq The new frequency to set.
  */
 void dvfs_set_freq(dvfs_ctx *ctx, unsigned int freq);
+
+/**
+ * Returns the dvfs_core structure associated to the given core id.
+ *
+ * @param ctx The DVFS context as provided by dvfs_start()
+ * @param core_id The core id.
+ *
+ * @return The dvfs_core structure associated to the core or NULL if the core id
+ * is not found.
+ */
+dvfs_core *dvfs_get_core(const dvfs_ctx *ctx, unsigned int core_id);
+
+/**
+ * Returns the DVFS unit associated with the given core.
+ *
+ * @param ctx The DVFS context as provided by dvfs_start()
+ * @param core The core structure.
+ *
+ * @return The DVFS unit in charge of core.
+ */
+dvfs_unit *dvfs_get_unit(const dvfs_ctx *ctx, const dvfs_core *core);

@@ -28,22 +28,24 @@ int main(int argc, char **argv)
    (void) argc;
    (void) argv;
 
-   dvfs_core *ctx = dvfs_core_open(0);
+   dvfs_ctx *ctx = dvfs_start();
    if ( ctx == NULL )
    {
       return -1;
    }
 
-   for (i = 0; i < ctx->nb_freqs; i++) {
-      printf("%u\n", ctx->freqs[i]);
+   dvfs_core *core = dvfs_get_core(ctx, 0);
+   for (i = 0; i < core->nb_freqs; i++) {
+      printf("%u\n", core->freqs[i]);
    }
+   dvfs_unit *unit = dvfs_get_unit(ctx, core);
    
-   dvfs_core_set_gov(ctx, "userspace");
-   dvfs_core_set_freq(ctx, ctx->freqs[ctx->nb_freqs - 1]);
+   dvfs_unit_set_gov(unit, "userspace");
+   dvfs_unit_set_freq(unit, core->freqs[core->nb_freqs - 1]);
 
    sleep(5);
 
-   dvfs_core_close(ctx);
+   dvfs_stop(ctx);
    
    return 0;
 }

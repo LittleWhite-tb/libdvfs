@@ -21,10 +21,17 @@
 #include <stdio.h>
 
 /**
+ * @file core.h
+ *
+ * Structures and functions to change frequency at the scale of a CPU 
+ * core.
+ */
+
+/**
  * Represents on core. A core allows to control CPU Core governor and frequency.
  */
 typedef struct {
-   unsigned int id;        //!< core id in Linux
+   unsigned int id;        //!< Core id as declared by Linux
    unsigned int nb_freqs;  //!< Number of frequencies available for this core
    unsigned int *freqs;    //!< Available frequencies for this core, sorted by increasing order
 

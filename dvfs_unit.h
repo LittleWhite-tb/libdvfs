@@ -23,16 +23,25 @@
 #include <stdbool.h>
 
 /**
+ * @file dvfs_unit.h
+ * 
+ * Structures and functions related to DVFS units (group of cores running
+ * at the same frequency).
+ *
+ * @sa dvfs_core
+ */
+
+/**
  * A DVFS unit. In order to understand what it is, the reader must understand
  * that several CPU models do not allow one to set different frequencies for the
  * CPU cores. Thus, the cores are groupped in DVFS units for which a single
  * frequency can be applied.
  *
- * \sa dvfs_core
+ * @sa dvfs_core()
  */
 typedef struct {
-   unsigned int nb_cores;     //<! number of cores in the unit
-   dvfs_core **cores;  //<! cores in the unit
+   unsigned int nb_cores;     //!< Number of cores in the unit
+   dvfs_core **cores;         //!< Cores in the unit
 } dvfs_unit;
 
 /**
@@ -45,8 +54,8 @@ typedef struct {
  *
  * @return A new DVFS unit or NULL in case of error.
  *
- * \sa dvfs_unit_close()
- * \sa dvfs_core()
+ * @sa dvfs_unit_close()
+ * @sa dvfs_core
  */
 dvfs_unit *dvfs_unit_open(unsigned int nb_cores, dvfs_core **cores);
 
@@ -56,7 +65,7 @@ dvfs_unit *dvfs_unit_open(unsigned int nb_cores, dvfs_core **cores);
  *
  * @param unit The DVFS unit to close.
  *
- * \sa dvfs_unit_open()
+ * @sa dvfs_unit_open()
  */
 void dvfs_unit_close(dvfs_unit *unit);
 

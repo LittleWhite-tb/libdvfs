@@ -122,12 +122,6 @@ bool dvfs_has_TB() {
    return hasTB;
 }
 
-/**
- * Sets the provided governor on all the DVFS units.
- *
- * @param dvfs The DVFS context as provided by dvfs_start
- * @param gov The new governor to set
- */
 void dvfs_set_gov(const dvfs_ctx *ctx, const char *gov) {
    unsigned int i;
 
@@ -138,13 +132,6 @@ void dvfs_set_gov(const dvfs_ctx *ctx, const char *gov) {
    }
 }
 
-/**
- * Sets the given frequency on all the DVFS units. The effects are unknown if
- * the current governor is not "userspace".
- *
- * @param dvfs The DVFS context as provided by dvfs_start
- * @param freq The new frequency to set.
- */
 void dvfs_set_freq(dvfs_ctx *ctx, unsigned int freq) {
    unsigned int i;
 
@@ -153,6 +140,40 @@ void dvfs_set_freq(dvfs_ctx *ctx, unsigned int freq) {
    for (i = 0; i < ctx->nb_units; i++) {
       dvfs_unit_set_freq(ctx->units[i], freq);
    }
+}
+
+dvfs_core *dvfs_get_core(const dvfs_ctx *ctx, unsigned int core_id) {
+   unsigned int i;
+
+   assert(ctx != NULL);
+
+   for (i = 0; i < ctx->nb_units; i++) {
+      unsigned int j;
+      for (j = 0; j < ctx->units[i]->nb_cores; j++) {
+         if (ctx->units[i]->cores[j]->id == core_id) {
+            return ctx->units[i]->cores[j];
+         }
+      }  
+   }
+
+   return NULL;
+}
+
+dvfs_unit *dvfs_get_unit(const dvfs_ctx *ctx, const dvfs_core *core) {
+   unsigned int i;
+
+   assert(ctx != NULL && core != NULL);
+
+   for (i = 0; i < ctx->nb_units; i++) {
+      unsigned int j;
+      for (j = 0; j < ctx->units[i]->nb_cores; j++) {
+         if (ctx->units[i]->cores[j]->id == core->id) {
+            return ctx->units[i];
+         }
+      }  
+   }
+
+   return NULL;
 }
 
 static unsigned int get_nb_cores() {
