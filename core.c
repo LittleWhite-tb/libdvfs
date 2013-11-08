@@ -117,7 +117,7 @@ dvfs_core *dvfs_core_open(unsigned int id) {
 
    // same for the frequency getter file
    snprintf(fname, sizeof(fname), SCALING_CURFREQ_FILE_PATTERN, id);
-   core->fd_getf = fopen(fname, "w");
+   core->fd_getf = fopen(fname, "r");
    if (core->fd_getf == NULL) {
       perror("Failed to open frequency info file");
       dvfs_core_close(core);
