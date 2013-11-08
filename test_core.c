@@ -34,11 +34,11 @@ int main(int argc, char **argv)
       return -1;
    }
 
-   dvfs_core *core = dvfs_get_core(ctx, 0);
+   const dvfs_core *core = dvfs_get_core(ctx, 0);
    for (i = 0; i < core->nb_freqs; i++) {
       printf("%u\n", core->freqs[i]);
    }
-   dvfs_unit *unit = dvfs_get_unit(ctx, core);
+   const dvfs_unit *unit = dvfs_get_unit(ctx, core);
    
    dvfs_unit_set_gov(unit, "userspace");
    dvfs_unit_set_freq(unit, core->freqs[core->nb_freqs - 1]);

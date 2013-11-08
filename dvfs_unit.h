@@ -20,8 +20,6 @@
 
 #include "core.h"
 
-#include <stdbool.h>
-
 /**
  * @file dvfs_unit.h
  * 
@@ -84,15 +82,24 @@ void dvfs_unit_set_gov(const dvfs_unit *unit, const char *gov);
  * @param unit The DVFS unit.
  * @param freq The frequency to set.
  */
-void dvfs_unit_set_freq(dvfs_unit *unit, unsigned int freq);
+void dvfs_unit_set_freq(const dvfs_unit *unit, unsigned int freq);
 
 /**
- * Returns true if the the core with the given id is inside the given DVFS unit.
+ * Returns the core with the given id if it is part of this DVFS unit, or NULL
+ * otherwise.
  *
  * @param unit The DVFS unit.
  * @param id The core id.
  *
- * @return True if the core with the given id is within \p unit.
+ * @return The core with the given id or NULL if the core is not within \p unit.
  */
-bool dvfs_unit_contains(dvfs_unit *unit, unsigned int id);
+const dvfs_core *dvfs_unit_get_core(const dvfs_unit *unit, unsigned int id);
 
+/**
+ * Returns the frequency currently set for the current DVFS unit.
+ *
+ * @param unit The DVFS unit.
+ *
+ * @return The frequency currently set for the whole unit.
+ */
+unsigned int dvfs_unit_get_freq(const dvfs_unit *unit);

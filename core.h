@@ -35,8 +35,8 @@ typedef struct {
    unsigned int nb_freqs;  //!< Number of frequencies available for this core
    unsigned int *freqs;    //!< Available frequencies for this core, sorted by increasing order
 
-   FILE *fd;               //!< File descriptor toward the \c set_speed file 
-   unsigned int cur_freq;  //!< Last requested core freqency
+   FILE *fd_setf;          //!< File descriptor toward the \c set_speed file 
+   FILE *fd_getf;          //!< Descriptor toward the \c cur_freq file
 
    char init_gov[128];     //!< Governor used when core get initialised
    unsigned int init_freq; //!< Freqency used when core get initialised
@@ -79,5 +79,13 @@ void dvfs_core_set_gov(const dvfs_core *core, const char *gov);
  * @param core The related core.
  * @param freq The frequency to set.
  */
-void dvfs_core_set_freq(dvfs_core *core, unsigned int freq);
+void dvfs_core_set_freq(const dvfs_core *core, unsigned int freq);
 
+/**
+ * Returns the frequency currently set for the core.
+ *
+ * @param core The CPU core.
+ * 
+ * @return The frequency selected for this core or 0 in case of error.
+ */
+unsigned int dvfs_core_get_freq(const dvfs_core *core);

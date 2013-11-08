@@ -52,7 +52,7 @@ void dvfs_unit_set_gov(const dvfs_unit *unit, const char *gov) {
    }
 }
 
-void dvfs_unit_set_freq(dvfs_unit *unit, unsigned int freq) {
+void dvfs_unit_set_freq(const dvfs_unit *unit, unsigned int freq) {
    unsigned int i;
 
    assert(unit != NULL);
@@ -62,17 +62,29 @@ void dvfs_unit_set_freq(dvfs_unit *unit, unsigned int freq) {
    }
 }
 
-bool dvfs_unit_contains(dvfs_unit *unit, unsigned int id) {
+const dvfs_core *dvfs_unit_get_core(const dvfs_unit *unit, unsigned int id) {
    unsigned int i;
 
    assert(unit != NULL);
 
    for (i = 0; i < unit->nb_cores; i++) {
       if (unit->cores[i]->id == id) {
-         return true;
+         return unit->cores[i];
       }
    }
 
-   return false;
+   return NULL;
 }
 
+unsigned int dvfs_unit_get_freq(const dvfs_unit *unit) {
+   unsigned int mfreq = 0, i;
+
+   assert(unit != NULL);
+
+   for (i = 0; i < unit->nb_cores; i++) {
+      unsigned int cfreq = dvfs_core_get_freq(unit->cores[i]);
+      mfreq = (mfreq >= cfreq ? mfreq : cfreq);
+   }
+
+   return mfreq;
+}

@@ -49,7 +49,7 @@ dvfs_ctx *dvfs_start() {
       // is this core already present in a unit?
       bool known = false;
       for (u = 0; u < ctx->nb_units; u++) {
-         if (dvfs_unit_contains(ctx->units[u], c)) {
+         if (dvfs_unit_get_core(ctx->units[u], c) != NULL) {
             known = true;
             break;
          }
@@ -142,7 +142,7 @@ void dvfs_set_freq(dvfs_ctx *ctx, unsigned int freq) {
    }
 }
 
-dvfs_core *dvfs_get_core(const dvfs_ctx *ctx, unsigned int core_id) {
+const dvfs_core *dvfs_get_core(const dvfs_ctx *ctx, unsigned int core_id) {
    unsigned int i;
 
    assert(ctx != NULL);
@@ -159,7 +159,7 @@ dvfs_core *dvfs_get_core(const dvfs_ctx *ctx, unsigned int core_id) {
    return NULL;
 }
 
-dvfs_unit *dvfs_get_unit(const dvfs_ctx *ctx, const dvfs_core *core) {
+const dvfs_unit *dvfs_get_unit(const dvfs_ctx *ctx, const dvfs_core *core) {
    unsigned int i;
 
    assert(ctx != NULL && core != NULL);

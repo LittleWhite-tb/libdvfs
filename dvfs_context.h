@@ -96,7 +96,7 @@ void dvfs_set_freq(dvfs_ctx *ctx, unsigned int freq);
  * @return The dvfs_core structure associated to the core or NULL if the core id
  * is not found.
  */
-dvfs_core *dvfs_get_core(const dvfs_ctx *ctx, unsigned int core_id);
+const dvfs_core *dvfs_get_core(const dvfs_ctx *ctx, unsigned int core_id);
 
 /**
  * Returns the DVFS unit associated with the given core.
@@ -106,4 +106,4 @@ dvfs_core *dvfs_get_core(const dvfs_ctx *ctx, unsigned int core_id);
  *
  * @return The DVFS unit in charge of core.
  */
-dvfs_unit *dvfs_get_unit(const dvfs_ctx *ctx, const dvfs_core *core);
+const dvfs_unit *dvfs_get_unit(const dvfs_ctx *ctx, const dvfs_core *core);

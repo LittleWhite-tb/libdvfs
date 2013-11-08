@@ -108,14 +108,21 @@ dvfs_core *dvfs_core_open(unsigned int id) {
   
    // open the frequency setter file
    snprintf (fname, sizeof (fname), SCALING_SETSPEED_FILE_PATTERN, id);
-   core->fd = fopen(fname, "w");
-   if (core->fd == NULL) {
+   core->fd_setf = fopen(fname, "w");
+   if (core->fd_setf == NULL) {
       perror("Failed to open frequency setting file");
       dvfs_core_close(core);
       return NULL;
    }
 
-   core->cur_freq = core->nb_freqs;
+   // same for the frequency getter file
+   snprintf(fname, sizeof(fname), SCALING_CURFREQ_FILE_PATTERN, id);
+   core->fd_getf = fopen(fname, "w");
+   if (core->fd_getf == NULL) {
+      perror("Failed to open frequency info file");
+      dvfs_core_close(core);
+      return NULL;
+   }
 
    return core;
 }
@@ -130,8 +137,11 @@ void dvfs_core_close(dvfs_core *core) {
    }
 
    free(core->freqs);
-   if (core->fd != NULL) {
-      fclose(core->fd);
+   if (core->fd_setf != NULL) {
+      fclose(core->fd_setf);
+   }
+   if (core->fd_getf != NULL) {
+      fclose(core->fd_getf);
    }
    free(core);
 }
@@ -157,19 +167,26 @@ void dvfs_core_set_gov(const dvfs_core *core, const char *gov) {
    fclose(fd);
 }
 
-void dvfs_core_set_freq(dvfs_core *core, unsigned int freq) {
+void dvfs_core_set_freq(const dvfs_core *core, unsigned int freq) {
    assert(core != NULL);
 
-   if (core->cur_freq == freq) {
-      return;
-   }
-
-   if (fprintf(core->fd, "%u", freq) < 0) {
+   if (fprintf(core->fd_setf, "%u", freq) < 0) {
       perror("Failed to set frequency");
       return;
    }
-   fflush(core->fd);
+   fflush(core->fd_setf);
+}
 
-   core->cur_freq = freq;
+unsigned int dvfs_core_get_freq(const dvfs_core *core) {
+   unsigned int res;
+
+   assert(core != NULL);
+
+   if (fscanf(core->fd_getf, "%u", &res) < 0) {
+      perror("Failed to read frequency");
+      return 0;
+   }
+
+   return res;
 }
 
