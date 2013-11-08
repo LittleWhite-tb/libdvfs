@@ -273,14 +273,9 @@ static void get_related_cores(unsigned int id, unsigned int **cores, unsigned in
       unsigned int nval;
       char sep;
 
-      fscanf(fd, "%c", &sep);
+      int fret = fscanf(fd, "%c", &sep);
       
-      if ( sep == '\n' ) // File finished, we guess, we have count everything
-      {
-         (*cores)[i++] = val;
-         break; // Leave
-      }
-      if (sep == ' ' || sep == ',') {
+      if (fret == EOF || fret == 0 || sep == ' ' || sep == ',' || sep == '\n') {
          (*cores)[i++] = val;
          continue;
       }
