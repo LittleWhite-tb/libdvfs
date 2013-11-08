@@ -244,18 +244,26 @@ static void get_related_cores(unsigned int id, unsigned int **cores, unsigned in
       char sep;
 
       fscanf(fd, "%c", &sep);
+      
+      // Try to treat the first file format (0 1 2 ... N)
+      if ( sep == '\n' ) // File finished, we guess, we have count everything
+      {
+         (*nb_cores)++; // Last core to count
+         break; // Leave
+      }
       if (sep == ' ' || sep == ',') {
          (*nb_cores)++;
          continue;
       }
 
-      if (sep != '-') {
+      if (sep != '-') { // Error case ... no format recognized here
          fprintf(stderr, "Illformed topology file: expected '-', read '%c' \n", sep);
          *nb_cores = 0;
          *cores = NULL;
          return;
       }
 
+      // Treat the second file (since first did not match) format (0-N)
       fscanf(fd, "%u", &nval);
       *nb_cores += nval - val + 1;
 
@@ -272,6 +280,12 @@ static void get_related_cores(unsigned int id, unsigned int **cores, unsigned in
       char sep;
 
       fscanf(fd, "%c", &sep);
+      
+      if ( sep == '\n' ) // File finished, we guess, we have count everything
+      {
+         (*cores)[i++] = val;
+         break; // Leave
+      }
       if (sep == ' ' || sep == ',') {
          (*cores)[i++] = val;
          continue;
