@@ -32,66 +32,57 @@
 #define SCALING_AVAIL_FREQ_FILE_PATTERN "/sys/devices/system/cpu/cpu%u/cpufreq/scaling_available_frequencies"
 #define SCALING_SETSPEED_FILE_PATTERN "/sys/devices/system/cpu/cpu%u/cpufreq/scaling_setspeed"
 
-/**
- * Opens the Core context for the given core ID.
- *
- * @param cpuId The id of the desired core.
- * @returns an instanciated Core context for this core. May return NULL in case
- * of error. The error cases are often related to file opening (like permission denied). An error message will be written
- * on stderr (using fprintf or perror).
- *
- * @sa core_closeContext
- */
-core_ctx_t *core_openContext(unsigned int cpuId) {
+dvfs_core *dvfs_core_open(unsigned int id) {
    char fname [256];
    char freqs[1024];
    char *strtokctx, *tmpstr;
    FILE *fd;
    unsigned int i;
 
-   core_ctx_t *ctx = malloc(sizeof(*ctx));
+   dvfs_core *core = malloc(sizeof(*core));
+   core->id = id;
 
    /* fetch  the initial governor and frequency */
-   snprintf (fname, sizeof (fname),SCALING_GOVERNOR_FILE_PATTERN, cpuId);
+   snprintf (fname, sizeof (fname), SCALING_GOVERNOR_FILE_PATTERN, id);
 
    fd = fopen(fname, "r");
    if (fd == NULL) {
       perror("Failed to open governor file");
-      free(ctx);
+      free(core);
       return NULL;
    }
-   fscanf(fd, "%127s", ctx->initGov);
+   fscanf(fd, "%127s", core->init_gov);
    fclose(fd);
 
-   if (!strcmp(ctx->initGov, "userspace")) {
-      snprintf (fname, sizeof (fname),SCALING_CURFREQ_FILE_PATTERN, cpuId);
+   if (!strcmp(core->init_gov, "userspace")) {
+      snprintf (fname, sizeof (fname), SCALING_CURFREQ_FILE_PATTERN, id);
       fd = fopen(fname, "r");
       if (fd == NULL) {
          perror("Failed to open frequency file");
-         free(ctx);
+         free(core);
          return NULL;
       }
-      fscanf(fd, "%u", &ctx->initFreq);
+      fscanf(fd, "%u", &core->init_freq);
       fclose(fd);
    }
 
    /* parse all the frequencies */
-   snprintf (fname, sizeof (fname),SCALING_AVAIL_FREQ_FILE_PATTERN, cpuId);
+   snprintf (fname, sizeof (fname), SCALING_AVAIL_FREQ_FILE_PATTERN, id);
    fd = fopen(fname, "r");
    if (fd == NULL) {
       perror("Failed to open available frequencies");
-      free(ctx);
+      free(core);
       return NULL;
    }
    if (fgets(freqs, sizeof(freqs), fd) == NULL) {
       perror("Failed to read available frequencies");
       fclose(fd);
-      free(ctx);
+      free(core);
       return NULL;
    }
    fclose(fd);
 
-   ctx->nbFreqs = 0;
+   core->nb_freqs = 0;
    bool inFreq = false;
    // Count freqs number
    for (tmpstr = freqs; *tmpstr; tmpstr++) {
@@ -99,81 +90,66 @@ core_ctx_t *core_openContext(unsigned int cpuId) {
          if (inFreq) {
             continue;
          }
-         ctx->nbFreqs++;
+         core->nb_freqs++;
          inFreq = true;
       } else {
          inFreq = false;
       }
    }
-   ctx->freqs = malloc(ctx->nbFreqs * sizeof(*ctx->freqs));
+   core->freqs = malloc(core->nb_freqs * sizeof(*core->freqs));
 
    for (i = 0, tmpstr = strtok_r(freqs, " ", &strtokctx);
-        i < ctx->nbFreqs && tmpstr != NULL;
+        i < core->nb_freqs && tmpstr != NULL;
         i++, tmpstr = strtok_r(NULL, " ", &strtokctx))
    {
-      ctx->freqs[ctx->nbFreqs - i - 1] = atol(tmpstr);
+      core->freqs[core->nb_freqs - i - 1] = atol(tmpstr);
    }
-   assert(i == ctx->nbFreqs);
+   assert(i == core->nb_freqs);
   
    // open the frequency setter file
-   snprintf (fname, sizeof (fname),SCALING_SETSPEED_FILE_PATTERN, cpuId);
-   ctx->freqFd = fopen(fname, "w");
-   if (ctx->freqFd == NULL) {
+   snprintf (fname, sizeof (fname), SCALING_SETSPEED_FILE_PATTERN, id);
+   core->fd = fopen(fname, "w");
+   if (core->fd == NULL) {
       perror("Failed to open frequency setting file");
-      core_closeContext(ctx);
+      dvfs_core_close(core);
       return NULL;
    }
 
-   ctx->cpuId = cpuId;
-   ctx->curFreq = 0;
+   core->cur_freq = core->nb_freqs;
 
-   return ctx;
+   return core;
 }
 
-/**
- * Closes properly an opened Core context.
- * Sets back the governor that was in place when opening the context
- *
- * @param ctx The context to close.
- */
-void core_closeContext(core_ctx_t *ctx) {
-   assert(ctx != NULL);
+void dvfs_core_close(dvfs_core *core) {
+   assert(core != NULL);
 
    // restore the previous state
-   core_setGov(ctx, ctx->initGov);
-   if (strcmp(ctx->initGov, "userspace") == 0) {
-      core_setFreq(ctx, ctx->initFreq);
+   dvfs_core_set_gov(core, core->init_gov);
+   if (strcmp(core->init_gov, "userspace") == 0) {
+      dvfs_core_set_freq(core, core->init_freq);
    }
 
-   free(ctx->freqs);
-   if ( ctx->freqFd != NULL )
-   {
-      fclose(ctx->freqFd);
+   free(core->freqs);
+   if (core->fd != NULL) {
+      fclose(core->fd);
    }
-   free(ctx);
+   free(core);
 }
 
-
-/**
- * Changes the governor for the given core.
- *
- * @param ctx The context of the Core context on which the governor has to be
- * changed.
- * @param governor The governor to set.
- */
-void core_setGov(const core_ctx_t *ctx, const char *governor) {
+void dvfs_core_set_gov(const dvfs_core *core, const char *gov) {
    char fname [256];
    FILE *fd;
 
-   assert(ctx != NULL);
+   assert(core != NULL);
 
-   snprintf (fname, sizeof (fname),SCALING_GOVERNOR_FILE_PATTERN, ctx->cpuId);
+   snprintf (fname, sizeof (fname), SCALING_GOVERNOR_FILE_PATTERN, core->id);
    fd = fopen(fname, "w");
    if (fd == NULL) {
       perror("Failed to open governor setter file");
       return;
    }
-   if (fwrite(governor, sizeof(*governor), strlen(governor) + 1, fd) < strlen(governor) + 1) {
+   if (fwrite(gov, sizeof(*gov), strlen(gov) + 1, fd) < strlen(gov) + 1) {
+      fclose(fd);
       perror("Failed to set the governor");
       return;
    }
@@ -181,47 +157,19 @@ void core_setGov(const core_ctx_t *ctx, const char *governor) {
    fclose(fd);
 }
 
-/**
- * Sets the frequency for the given core. Assumes that the "userspace" governor
- * has been set.
- *
- * @param ctx The related Core context.
- * @param freq The frequency to set.
- */
-void core_setFreq(const core_ctx_t *ctx, unsigned int freq) {
-   assert(ctx != NULL);
+void dvfs_core_set_freq(dvfs_core *core, unsigned int freq) {
+   assert(core != NULL);
 
-   if (fprintf(ctx->freqFd, "%u", freq) < 0) {
+   if (core->cur_freq == freq) {
+      return;
+   }
+
+   if (fprintf(core->fd, "%u", freq) < 0) {
       perror("Failed to set frequency");
       return;
    }
-   fflush(ctx->freqFd);
+   fflush(core->fd);
+
+   core->cur_freq = freq;
 }
 
-/**
- * Returns the number of available frequencies in the given Core context.
- *
- * @param ctx The Core context.
- * @return The number of different frequencies in the context.
- */
-unsigned int core_getNbFreqs(const core_ctx_t *ctx) {
-   assert(ctx != NULL);
-   
-   return ctx->nbFreqs;
-}
-
-/**
- * Returns the frequencies available for the given context. Frequencies are
- * sorted: the minimal frequency is always at position 0.
- *
- * @param ctx The Core context.
- * @param freqId The position of the frequency in the context (< nbFreqs).
- *
- * @return The frequency at the given position in the context.
- */
-unsigned int core_getFreq(const core_ctx_t *ctx, unsigned int freqId) {
-   assert(ctx != NULL);
-   assert(freqId < ctx->nbFreqs);
-
-   return ctx->freqs[freqId];
-}

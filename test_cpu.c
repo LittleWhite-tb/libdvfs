@@ -19,27 +19,27 @@
 #include <stdio.h>
 #include <unistd.h>
 
-#include "cpu.h"
+#include "libdvfs.h"
 
 int main(int argc, char **argv)
 {
    (void) argc;
    (void) argv;
 
-   cpu_ctx_t *ctx = cpu_openContext();
+   dvfs_ctx *ctx = dvfs_start();
    if ( ctx == NULL )
    {
       return -1;
    }
 
-   cpu_setGov(ctx,"userspace");
-   cpu_setFreq(ctx,2200000);
+   dvfs_set_gov(ctx, "userspace");
+   dvfs_set_freq(ctx, 2200000);
 
    sleep(5);
 
-   cpu_closeContext(ctx);
+   dvfs_stop(ctx);
    
-   if ( hasTurboBoost() )
+   if ( dvfs_has_TB() )
    {
       printf("This CPU has TurboBoost\n");
    }

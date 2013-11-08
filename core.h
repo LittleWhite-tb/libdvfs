@@ -16,36 +16,61 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef CORE_H
-#define CORE_H
+#pragma once
 
 #include <stdio.h>
 
 /**
- * Core Context
- * A core context allows to control CPU Core governor and frequency.
- * Morever, you can get the list of frequencies available for this core with
- * \a core_getNbFreqs and \a core_getFreq.
+ * Represents on core. A core allows to control CPU Core governor and frequency.
  */
 typedef struct {
-   unsigned int cpuId; //!< core id
-   unsigned int nbFreqs; //!< Number of frequency available for this core
-   unsigned int *freqs; //!< List of frequency available for this core
+   unsigned int id;        //!< core id in Linux
+   unsigned int nb_freqs;  //!< Number of frequencies available for this core
+   unsigned int *freqs;    //!< Available frequencies for this core, sorted by increasing order
 
-   FILE *freqFd; //!< File descriptor on the set_speed file 
-   unsigned int curFreq; //!< Actual core freqency
+   FILE *fd;               //!< File descriptor toward the \c set_speed file 
+   unsigned int cur_freq;  //!< Last requested core freqency
 
-   char initGov[128]; //!< governor used when core get initialised
-   unsigned int initFreq; //!< freqency used when core get initialised
-} core_ctx_t;
+   char init_gov[128];     //!< Governor used when core get initialised
+   unsigned int init_freq; //!< Freqency used when core get initialised
+} dvfs_core;
 
-core_ctx_t *core_openContext(unsigned int cpuId);
-void core_closeContext(core_ctx_t *ctx);
+/**
+ * Opens the Core context for the given core ID.
+ *
+ * @param id The id of the core to control.
+ *
+ * @return an instanciated Core context for this core. May return NULL in case
+ * of error. The error cases are often related to file opening (like permission
+ * denied). An error message will be written on stderr (using fprintf or
+ * perror).
+ *
+ * @sa dvfs_core_close()
+ */
+dvfs_core *dvfs_core_open(unsigned int id);
 
-void core_setGov(const core_ctx_t *ctx, const char *governor);
+/**
+ * Closes properly an opened Core context.
+ * Sets back the governor that was in place when opening the context.
+ *
+ * @param core The core to close.
+ */
+void dvfs_core_close(dvfs_core *core);
 
-void core_setFreq(const core_ctx_t *ctx, unsigned int freq);
-unsigned int core_getNbFreqs(const core_ctx_t *ctx);
-unsigned int core_getFreq(const core_ctx_t *ctx, unsigned int freqId);
+/**
+ * Changes the governor on the given core.
+ *
+ * @param core The core on which the governor has to be set.
+ * @param gov The governor to set.
+ */
+void dvfs_core_set_gov(const dvfs_core *core, const char *gov);
 
-#endif
+/**
+ * Sets the frequency for the given core. Assumes that the "userspace" governor
+ * has been set, result is unknown otherwise.
+ *
+ * @param core The related core.
+ * @param freq The frequency to set.
+ */
+void dvfs_core_set_freq(dvfs_core *core, unsigned int freq);
+

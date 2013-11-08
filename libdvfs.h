@@ -3,7 +3,8 @@ extern "C" {
 #endif
 
 #include "core.h"
-#include "cpu.h"
+#include "dvfs_unit.h"
+#include "dvfs_context.h"
 
 #ifdef __cplusplus
 }

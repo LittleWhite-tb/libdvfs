@@ -19,7 +19,7 @@
 #include <stdio.h>
 #include <unistd.h>
 
-#include "core.h"
+#include "libdvfs.h"
 
 int main(int argc, char **argv)
 {
@@ -28,22 +28,22 @@ int main(int argc, char **argv)
    (void) argc;
    (void) argv;
 
-   core_ctx_t *ctx = core_openContext(0);
+   dvfs_core *ctx = dvfs_core_open(0);
    if ( ctx == NULL )
    {
       return -1;
    }
 
-   for (i = 0; i < core_getNbFreqs(ctx); i++) {
-      printf("%u\n", core_getFreq(ctx, i));
+   for (i = 0; i < ctx->nb_freqs; i++) {
+      printf("%u\n", ctx->freqs[i]);
    }
    
-   core_setGov(ctx, "userspace");
-   core_setFreq(ctx, core_getFreq(ctx, 0));
+   dvfs_core_set_gov(ctx, "userspace");
+   dvfs_core_set_freq(ctx, ctx->freqs[ctx->nb_freqs - 1]);
 
    sleep(5);
 
-   core_closeContext(ctx);
+   dvfs_core_close(ctx);
    
    return 0;
 }

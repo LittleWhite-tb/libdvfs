@@ -21,7 +21,7 @@ all: libdvfs.so
 
 .PHONY: all clean distclean install uninstall test doc
 
-libdvfs.so: core.o cpu.o
+libdvfs.so: core.o dvfs_unit.o dvfs_context.o
 	$(CC) -shared $(CFLAGS) $^ -o $@
 
 test: test_core test_cpu
