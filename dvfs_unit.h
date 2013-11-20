@@ -18,7 +18,7 @@
 
 #pragma once
 
-#include "core.h"
+#include "dvfs_core.h"
 
 /**
  * @file dvfs_unit.h
@@ -72,8 +72,10 @@ void dvfs_unit_close(dvfs_unit *unit);
  *
  * @param unit The DVFS unit.
  * @param gov The governor to set.
+ *
+ * @return Upon successful completion 1 is return. Otherwise, 0 is return and errno is set appropriately.
  */
-void dvfs_unit_set_gov(const dvfs_unit *unit, const char *gov);
+unsigned int dvfs_unit_set_gov(const dvfs_unit *unit, const char *gov);
 
 /**
  * Sets the given frequency on all the unit cores. The effect is unknown if the
@@ -81,8 +83,10 @@ void dvfs_unit_set_gov(const dvfs_unit *unit, const char *gov);
  *
  * @param unit The DVFS unit.
  * @param freq The frequency to set.
+ *
+ * @return Upon successful completion 1 is return. Otherwise, 0 is return and errno is set appropriately.
  */
-void dvfs_unit_set_freq(const dvfs_unit *unit, unsigned int freq);
+unsigned int dvfs_unit_set_freq(const dvfs_unit *unit, unsigned int freq);
 
 /**
  * Returns the core with the given id if it is part of this DVFS unit, or NULL

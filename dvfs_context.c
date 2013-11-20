@@ -65,6 +65,7 @@ dvfs_ctx *dvfs_start() {
       if (ucores_ids == NULL) {
          fprintf(stderr, "Failed to get related cores of core %u\n", c);
          free(ctx->units);
+         free (ctx);
          return NULL;
       }
 
@@ -74,8 +75,11 @@ dvfs_ctx *dvfs_start() {
          ucores[uc] = dvfs_core_open(ucores_ids[uc]);
 
          if (ucores[uc] == NULL) {
-            nb_ucores = uc;
-            break;
+            free (ucores_ids);
+            free (ucores);
+            free (ctx->units);
+            free (ctx);
+            return NULL;
          }
       }
       free(ucores_ids);
@@ -102,8 +106,7 @@ void dvfs_stop(dvfs_ctx *ctx) {
 bool dvfs_has_TB() {
    FILE* pFile = NULL;
    pFile = fopen("/proc/cpuinfo", "r");
-   if (pFile == NULL) {
-      perror("Fail to open /proc/cpuinfo");
+   if (pFile == NULL) { 
       return false;
    }
 
@@ -122,24 +125,30 @@ bool dvfs_has_TB() {
    return hasTB;
 }
 
-void dvfs_set_gov(const dvfs_ctx *ctx, const char *gov) {
+unsigned int dvfs_set_gov(const dvfs_ctx *ctx, const char *gov) {
    unsigned int i;
+   short ret = 1;
 
    assert(ctx != NULL);
 
    for (i = 0; i < ctx->nb_units; i++) {
-      dvfs_unit_set_gov(ctx->units[i], gov);
+      ret &= dvfs_unit_set_gov(ctx->units[i], gov);
    }
+
+   return ret;
 }
 
-void dvfs_set_freq(dvfs_ctx *ctx, unsigned int freq) {
+unsigned int dvfs_set_freq(dvfs_ctx *ctx, unsigned int freq) {
    unsigned int i;
+   short ret = 1;
 
    assert(ctx != NULL);
 
    for (i = 0; i < ctx->nb_units; i++) {
-      dvfs_unit_set_freq(ctx->units[i], freq);
+      ret &= dvfs_unit_set_freq(ctx->units[i], freq);
    }
+
+   return ret;
 }
 
 const dvfs_core *dvfs_get_core(const dvfs_ctx *ctx, unsigned int core_id) {
@@ -185,8 +194,7 @@ static unsigned int get_nb_cores() {
       // Second try
       FILE* pFile = NULL;
       pFile = fopen("/proc/cpuinfo", "r");
-      if (pFile == NULL) {
-         perror("Fail to open /proc/cpuinfo");
+      if (pFile == NULL) { 
          return 0;
       }
       
@@ -227,8 +235,7 @@ static void get_related_cores(unsigned int id, unsigned int **cores, unsigned in
       }
    }
    
-   if ((fd = fopen(relfile, "r")) == NULL) {
-      perror("Failed to read related core file");
+   if ((fd = fopen(relfile, "r")) == NULL) { 
       *nb_cores = 0;
       *cores = NULL;
       return;
@@ -273,9 +280,14 @@ static void get_related_cores(unsigned int id, unsigned int **cores, unsigned in
       unsigned int nval;
       char sep;
 
-      int fret = fscanf(fd, "%c", &sep);
+      fscanf(fd, "%c", &sep);
       
-      if (fret == EOF || fret == 0 || sep == ' ' || sep == ',' || sep == '\n') {
+      if ( sep == '\n' ) // File finished, we guess, we have count everything
+      {
+         (*cores)[i++] = val;
+         break; // Leave
+      }
+      if (sep == ' ' || sep == ',') {
          (*cores)[i++] = val;
          continue;
       }
