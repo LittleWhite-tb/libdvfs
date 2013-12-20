@@ -152,7 +152,6 @@ dvfs_core *dvfs_core_open(unsigned int id) {
 
 void dvfs_core_close(dvfs_core *core) {
    assert (core != NULL);
- 
    // restore the previous state
    dvfs_core_set_gov(core, core->init_gov);
 
@@ -164,9 +163,11 @@ void dvfs_core_close(dvfs_core *core) {
    if (core->fd_setf != NULL) {
       fclose(core->fd_setf), core->fd_setf = NULL;
    }
+
    if (core->fd_getf != NULL) {
       fclose(core->fd_getf), core->fd_getf = NULL;
    }
+
    free(core);
 }
 
@@ -200,7 +201,11 @@ unsigned int dvfs_core_set_gov(const dvfs_core *core, const char *gov) {
 
 unsigned int dvfs_core_set_freq(const dvfs_core *core, unsigned int freq) {
    assert (core != NULL);
-
+   
+   // If fd_freq has not been opened yet
+   if (core->fd_setf == NULL) {
+      return 0;
+   }
    // check that the frequency asked is available
 #ifndef NDEBUG
    unsigned int i;
@@ -212,6 +217,9 @@ unsigned int dvfs_core_set_freq(const dvfs_core *core, unsigned int freq) {
       }
    }
 
+   if (!freqIsValid) {
+      fprintf (stderr, "Freq %u is invalid\n", freq);
+   }
    assert (freqIsValid);
 #endif
 
