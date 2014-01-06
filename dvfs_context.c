@@ -127,7 +127,7 @@ bool dvfs_has_TB() {
 
 unsigned int dvfs_set_gov(const dvfs_ctx *ctx, const char *gov) {
    unsigned int i;
-   short ret = 1;
+   unsigned int ret = 1;
 
    assert(ctx != NULL);
 
@@ -140,7 +140,7 @@ unsigned int dvfs_set_gov(const dvfs_ctx *ctx, const char *gov) {
 
 unsigned int dvfs_set_freq(dvfs_ctx *ctx, unsigned int freq) {
    unsigned int i;
-   short ret = 1;
+   unsigned int ret = 1;
 
    assert(ctx != NULL);
 
