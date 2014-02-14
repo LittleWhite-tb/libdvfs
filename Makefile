@@ -15,7 +15,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 CC?=gcc
-CFLAGS=-O2 -g -Wall -Wextra -fPIC
+CFLAGS=-Og -g -Wall -Wextra -fPIC
 
 all: libdvfs.so
 
@@ -31,7 +31,12 @@ test_core: test_core.o libdvfs.so
 	
 test_cpu: test_cpu.o libdvfs.so
 	$(CC) $(CFLAGS) $^ -o $@
-	
+
+freqdomain: freqdomain.o dvfs_core.o dvfs_unit.o dvfs_context.o
+	$(CC) -Og -fPIC $^ -o $@
+
+freqdomain.o: freqdomain.c
+	$(CC) -Og -fPIC -g -Wall -Wextra -c $< -o $@
 
 %.o: %.c *.h
 	$(CC) $(CFLAGS) -c $< -o $@

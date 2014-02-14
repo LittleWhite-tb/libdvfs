@@ -131,10 +131,8 @@ dvfs_core *dvfs_core_open(unsigned int id) {
    // open the frequency setter file
    snprintf (fname, sizeof (fname), SCALING_SETSPEED_FILE_PATTERN, id);
    core->fd_setf = fopen(fname, "w");
-   if (core->fd_setf == NULL) {
-      dvfs_core_close(core);
-      return NULL;
-   }
+   // don't check the result here to allow instantiating the library without any
+   // write access. Only set freq will fail (with no trouble).
 
    // Paranoid: Make sure the fname buffer is long enough
    assert (sizeof (SCALING_CURFREQ_FILE_PATTERN) <= sizeof (fname));
@@ -206,6 +204,7 @@ unsigned int dvfs_core_set_freq(const dvfs_core *core, unsigned int freq) {
    if (core->fd_setf == NULL) {
       return 0;
    }
+
    // check that the frequency asked is available
 #ifndef NDEBUG
    unsigned int i;

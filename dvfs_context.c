@@ -19,6 +19,7 @@
 #include "dvfs_context.h"
 
 #include <assert.h>
+#include <cpuid.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -214,28 +215,28 @@ static unsigned int get_nb_cores() {
 static void get_related_cores(unsigned int id, unsigned int **cores, unsigned int *nb_cores) {
    unsigned int val, i;
    char relfile[1024];
-   struct utsname un;
    FILE *fd;
+   struct stat buf;
 
    assert(cores != NULL && nb_cores != NULL);
 
-   uname(&un);
+   // all Linux files are broken in some versions... first rely on the manufacturer
+   __get_cpuid(0, &i, (unsigned int *) relfile, (unsigned int *) (relfile + 8),
+               (unsigned int *) (relfile + 4));
+   relfile[12] = '\0';
 
-   // related_cpus disappears from 3.9 to 3.10 kernel versions...
-   // assume shared freq domain at the CPU level there
-   if (!strncmp(un.release, "3.9", 3) || !strncmp(un.release, "3.10", 4)) {
+   // Intel platforms have a single frequency domain
+   if (strncmp(relfile, "GenuineIntel", 12) == 0) {
       snprintf(relfile, sizeof(relfile), "/sys/devices/system/cpu/cpu%u/topology/core_siblings_list", id);
    } else {
-      struct stat buf;
+      // prefer the more recent freq_domain_cpus over related_cpus
       snprintf(relfile, sizeof(relfile), "/sys/devices/system/cpu/cpu%u/cpufreq/freqdomain_cpus", id);
-
-      // old filename before 3.9 kernels
       if (stat(relfile, &buf) < 0) {
          snprintf(relfile, sizeof(relfile), "/sys/devices/system/cpu/cpu%u/cpufreq/related_cpus", id);
       }
    }
    
-   if ((fd = fopen(relfile, "r")) == NULL) { 
+   if ((fd = fopen(relfile, "r")) == NULL) {
       *nb_cores = 0;
       *cores = NULL;
       return;
