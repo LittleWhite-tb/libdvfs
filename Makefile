@@ -15,13 +15,13 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 CC?=gcc
-CFLAGS=-O3 -g -Wall -Wextra -fPIC
+CFLAGS=-O2 -g -Wall -Wextra -fPIC
 
 all: libdvfs.so
 
 .PHONY: all clean distclean install uninstall test doc
 
-libdvfs.so: core.o dvfs_unit.o dvfs_context.o
+libdvfs.so: dvfs_core.o dvfs_unit.o dvfs_context.o
 	$(CC) -shared $(CFLAGS) $^ -o $@
 
 test: test_core test_cpu
@@ -42,8 +42,9 @@ doc:
 install:
 	/usr/bin/install -m 0755 libdvfs.so /usr/local/lib
 	mkdir -p /usr/local/include/libdvfs
-	/usr/bin/install -m 0655 core.h /usr/local/include/libdvfs
-	/usr/bin/install -m 0655 cpu.h /usr/local/include/libdvfs
+	/usr/bin/install -m 0655 dvfs_core.h /usr/local/include/libdvfs
+	/usr/bin/install -m 0655 dvfs_context.h /usr/local/include/libdvfs
+	/usr/bin/install -m 0655 dvfs_unit.h /usr/local/include/libdvfs
 	/usr/bin/install -m 0655 libdvfs.h /usr/local/include/libdvfs
 
 uninstall:
@@ -51,7 +52,7 @@ uninstall:
 	rm -rf /usr/local/include/libdvfs
 
 clean:
-	rm -f *.o
+	rm -f *.o *.so
 
 distclean: clean
 	rm -f *.so

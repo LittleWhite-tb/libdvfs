@@ -21,7 +21,7 @@
 #include <stdbool.h>
 
 #include "dvfs_unit.h"
-#include "core.h"
+#include "dvfs_core.h"
 
 
 /**
@@ -76,7 +76,7 @@ bool dvfs_has_TB();
  * @param ctx The DVFS context as provided by dvfs_start
  * @param gov The new governor to set
  */
-void dvfs_set_gov(const dvfs_ctx *ctx, const char *gov);
+unsigned int dvfs_set_gov(const dvfs_ctx *ctx, const char *gov);
 
 /**
  * Sets the given frequency on all the DVFS units. The effects are unknown if
@@ -85,7 +85,7 @@ void dvfs_set_gov(const dvfs_ctx *ctx, const char *gov);
  * @param ctx The DVFS context as provided by dvfs_start()
  * @param freq The new frequency to set.
  */
-void dvfs_set_freq(dvfs_ctx *ctx, unsigned int freq);
+unsigned int dvfs_set_freq(dvfs_ctx *ctx, unsigned int freq);
 
 /**
  * Returns the dvfs_core structure associated to the given core id.

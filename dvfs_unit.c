@@ -42,24 +42,36 @@ void dvfs_unit_close(dvfs_unit *unit) {
    free(unit);
 }
 
-void dvfs_unit_set_gov(const dvfs_unit *unit, const char *gov) {
+unsigned int dvfs_unit_set_gov(const dvfs_unit *unit, const char *gov) {
    unsigned int i;
+   short ret = 1;
 
    assert(unit != NULL);
 
    for (i = 0; i < unit->nb_cores; i++) {
-      dvfs_core_set_gov(unit->cores[i], gov);
+      ret &= dvfs_core_set_gov (unit->cores[i], gov);
+      if (!ret) {
+         fprintf (stderr, "unitSetGov: error for core #%u\n", i);
+      }
    }
+
+   return ret;
 }
 
-void dvfs_unit_set_freq(const dvfs_unit *unit, unsigned int freq) {
+unsigned int dvfs_unit_set_freq(const dvfs_unit *unit, unsigned int freq) {
    unsigned int i;
+   short ret = 1;
 
    assert(unit != NULL);
 
    for (i = 0; i < unit->nb_cores; i++) {
-      dvfs_core_set_freq(unit->cores[i], freq);
+      ret &= dvfs_core_set_freq(unit->cores[i], freq);
+      if (!ret) {
+         fprintf (stderr, "unitSetGov: error for core #%u\n", i);
+      }
    }
+
+   return ret;
 }
 
 const dvfs_core *dvfs_unit_get_core(const dvfs_unit *unit, unsigned int id) {
@@ -82,7 +94,7 @@ unsigned int dvfs_unit_get_freq(const dvfs_unit *unit) {
    assert(unit != NULL);
 
    for (i = 0; i < unit->nb_cores; i++) {
-      unsigned int cfreq = dvfs_core_get_freq(unit->cores[i]);
+      unsigned int cfreq = dvfs_core_get_current_freq(unit->cores[i]);
       mfreq = (mfreq >= cfreq ? mfreq : cfreq);
    }
 

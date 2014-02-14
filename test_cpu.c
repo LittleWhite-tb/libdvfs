@@ -27,20 +27,26 @@ int main(int argc, char **argv)
    (void) argv;
 
    dvfs_ctx *ctx = dvfs_start();
-   if ( ctx == NULL )
-   {
+   if (ctx == NULL) {
+      perror ("DVFS Start");
       return -1;
    }
 
-   dvfs_set_gov(ctx, "userspace");
-   dvfs_set_freq(ctx, 2200000);
+   if (dvfs_set_gov(ctx, "userspace") == 0) {
+      perror ("Setting userspace");
+      return -1;
+   }
+   
+   if (dvfs_set_freq(ctx, 2200000) == 0) {
+      perror ("Setting frequency");
+      return -1;
+   }
 
-   sleep(5);
+   sleep(2);
 
    dvfs_stop(ctx);
    
-   if ( dvfs_has_TB() )
-   {
+   if (dvfs_has_TB()) {
       printf("This CPU has TurboBoost\n");
    }
 

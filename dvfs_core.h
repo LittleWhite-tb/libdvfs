@@ -21,7 +21,7 @@
 #include <stdio.h>
 
 /**
- * @file core.h
+ * @file dvfs_core.h
  *
  * Structures and functions to change frequency at the scale of a CPU 
  * core.
@@ -48,9 +48,8 @@ typedef struct {
  * @param id The id of the core to control.
  *
  * @return an instanciated Core context for this core. May return NULL in case
- * of error. The error cases are often related to file opening (like permission
- * denied). An error message will be written on stderr (using fprintf or
- * perror).
+ * of error. The error cases are often related to file opening (such as permission
+ * denied). In such cases errno is set appropriately.
  *
  * @sa dvfs_core_close()
  */
@@ -69,8 +68,10 @@ void dvfs_core_close(dvfs_core *core);
  *
  * @param core The core on which the governor has to be set.
  * @param gov The governor to set.
+ *
+ * @return Upon successful completion 1 is returned. Otherwise, 0 is returned and errno is set appropriately.
  */
-void dvfs_core_set_gov(const dvfs_core *core, const char *gov);
+unsigned int dvfs_core_set_gov(const dvfs_core *core, const char *gov);
 
 /**
  * Sets the frequency for the given core. Assumes that the "userspace" governor
@@ -78,8 +79,10 @@ void dvfs_core_set_gov(const dvfs_core *core, const char *gov);
  *
  * @param core The related core.
  * @param freq The frequency to set.
+ *
+ * @return Upon successful completion 1 is returned. Otherwise, 0 is returned and errno is set appropriately.
  */
-void dvfs_core_set_freq(const dvfs_core *core, unsigned int freq);
+unsigned int dvfs_core_set_freq(const dvfs_core *core, unsigned int freq);
 
 /**
  * Returns the frequency currently set for the core. Warning, this is not
@@ -93,4 +96,24 @@ void dvfs_core_set_freq(const dvfs_core *core, unsigned int freq);
  *
  * @sa dvfs_unit_get_freq()
  */
-unsigned int dvfs_core_get_freq(const dvfs_core *core);
+unsigned int dvfs_core_get_current_freq(const dvfs_core *core);
+
+/**
+ * Returns the frequency currently set for the core.
+ *
+ * @param core The CPU core.
+ * @param freq_id The id of the frequency with respect to the order in the freqs internal array
+ * 
+ * @return Upon successful completion the corresponding frequency is return. 0 is returned in case the given freq_id parameter is out of bounds.
+ */
+unsigned int dvfs_core_get_freq(const dvfs_core *core, unsigned int freq_id);
+
+/**
+ * Returns the number of frequencies available for the core.
+ *
+ * @param core the CPU core.
+ *
+ * @return The number of frequencies available on this core.
+ */
+unsigned int dvfs_core_get_nb_freqs (const dvfs_core *core);
+
