@@ -82,10 +82,15 @@ void dvfs_core_set_gov(const dvfs_core *core, const char *gov);
 void dvfs_core_set_freq(const dvfs_core *core, unsigned int freq);
 
 /**
- * Returns the frequency currently set for the core.
+ * Returns the frequency currently set for the core. Warning, this is not
+ * necessarily the frequency currently active for the core as other cores in the
+ * same unit may have requested a different frequency. In order to determine the
+ * frequency actually set for the core, use instead \p dvfs_unit_get_freq().
  *
  * @param core The CPU core.
  * 
  * @return The frequency selected for this core or 0 in case of error.
+ *
+ * @sa dvfs_unit_get_freq()
  */
 unsigned int dvfs_core_get_freq(const dvfs_core *core);
