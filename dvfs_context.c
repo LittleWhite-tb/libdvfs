@@ -86,7 +86,8 @@ dvfs_ctx *dvfs_start() {
       free(ucores_ids);
 
       // create the unit
-      ctx->units[ctx->nb_units++] = dvfs_unit_open(nb_ucores, ucores);
+      ctx->units[ctx->nb_units] = dvfs_unit_open(nb_ucores, ucores, ctx->nb_units);
+      ctx->nb_units++;
    }
       
    return ctx;

@@ -75,6 +75,8 @@ bool dvfs_has_TB();
  *
  * @param ctx The DVFS context as provided by dvfs_start
  * @param gov The new governor to set
+ *
+ * @return Upon successful completion 1 is return. Otherwise, 0 is return and errno is set appropriately.
  */
 unsigned int dvfs_set_gov(const dvfs_ctx *ctx, const char *gov);
 

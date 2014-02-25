@@ -64,6 +64,17 @@ dvfs_core *dvfs_core_open(unsigned int id);
 void dvfs_core_close(dvfs_core *core);
 
 /**
+ * Sets the current DVFS governor on the given core to the given buffer.
+ *
+ * @param core The core on which the governor has to be set.
+ * @param buf The pointer to the buffer which will be set to the governor string value
+ * @param buf_len The size of the buffer
+ *
+ * @return Upon successful completion 1 is returned. Otherwise, 0 is returned and errno is set appropriately.
+ */
+unsigned int dvfs_core_get_gov(const dvfs_core *core, char *buf, size_t buf_len);
+
+/**
  * Changes the governor on the given core.
  *
  * @param core The core on which the governor has to be set.

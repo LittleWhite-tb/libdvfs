@@ -169,6 +169,29 @@ void dvfs_core_close(dvfs_core *core) {
    free(core);
 }
 
+unsigned int dvfs_core_get_gov (const dvfs_core *core, char *buf, size_t buf_len) {
+   char fname [256];
+   FILE *fd;
+   assert (core != NULL);
+
+   assert (sizeof (SCALING_GOVERNOR_FILE_PATTERN) <= sizeof (fname));
+
+   snprintf (fname, sizeof (fname), SCALING_GOVERNOR_FILE_PATTERN, core->id);
+   fd = fopen (fname, "w");
+   if (fd == NULL) {
+      return 0;
+   }
+
+   if (fgets (buf, buf_len, fd) == NULL) {
+      fclose (fd);
+      return 0;
+   }
+
+   fclose (fd);
+
+   return 1;
+}
+
 unsigned int dvfs_core_set_gov(const dvfs_core *core, const char *gov) {
    char fname [256];
    FILE *fd;
@@ -192,8 +215,8 @@ unsigned int dvfs_core_set_gov(const dvfs_core *core, const char *gov) {
    if (fflush (fd) != 0) {
       return 0;
    }
-
    fclose (fd);
+
    return 1;
 }
 
@@ -202,6 +225,7 @@ unsigned int dvfs_core_set_freq(const dvfs_core *core, unsigned int freq) {
    
    // If fd_freq has not been opened yet
    if (core->fd_setf == NULL) {
+      fprintf (stderr, "setf\n");
       return 0;
    }
 
@@ -223,6 +247,7 @@ unsigned int dvfs_core_set_freq(const dvfs_core *core, unsigned int freq) {
 #endif
 
    if (fprintf(core->fd_setf, "%u", freq) < 0) {
+      fprintf (stderr, "setf2\n");
       return 0;
    }
 

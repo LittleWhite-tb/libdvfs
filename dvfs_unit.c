@@ -21,12 +21,13 @@
 #include <assert.h>
 #include <stdlib.h>
 
-dvfs_unit *dvfs_unit_open(unsigned int nb_cores, dvfs_core **cores) {
+dvfs_unit *dvfs_unit_open(unsigned int nb_cores, dvfs_core **cores, unsigned int unit_id) {
    assert(cores != NULL);
 
    dvfs_unit *res = malloc(sizeof(*res));
    res->nb_cores = nb_cores;
    res->cores = cores;
+   res->id = unit_id;
    return res;
 }
 
@@ -67,7 +68,7 @@ unsigned int dvfs_unit_set_freq(const dvfs_unit *unit, unsigned int freq) {
    for (i = 0; i < unit->nb_cores; i++) {
       ret &= dvfs_core_set_freq(unit->cores[i], freq);
       if (!ret) {
-         fprintf (stderr, "unitSetGov: error for core #%u\n", i);
+         fprintf (stderr, "unitSetFreq: error for core #%u\n", i);
       }
    }
 
@@ -99,4 +100,9 @@ unsigned int dvfs_unit_get_freq(const dvfs_unit *unit) {
    }
 
    return mfreq;
+}
+
+unsigned int dvfs_unit_get_id (const dvfs_unit *unit) {
+   assert (unit != NULL);
+   return unit->id;
 }

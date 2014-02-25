@@ -38,6 +38,7 @@
  * @sa dvfs_core()
  */
 typedef struct {
+   unsigned int id;      //!< Unit id as described in the dvfs_context structure
    unsigned int nb_cores;     //!< Number of cores in the unit
    dvfs_core **cores;         //!< Cores in the unit
 } dvfs_unit;
@@ -55,7 +56,7 @@ typedef struct {
  * @sa dvfs_unit_close()
  * @sa dvfs_core
  */
-dvfs_unit *dvfs_unit_open(unsigned int nb_cores, dvfs_core **cores);
+dvfs_unit *dvfs_unit_open(unsigned int nb_cores, dvfs_core **cores, unsigned int unit_id);
 
 /**
  * Frees the memory associated to a DVFS unit and restore their DVFS state. You
@@ -107,3 +108,9 @@ const dvfs_core *dvfs_unit_get_core(const dvfs_unit *unit, unsigned int id);
  * @return The frequency currently set for the whole unit.
  */
 unsigned int dvfs_unit_get_freq(const dvfs_unit *unit);
+
+/**
+ * Returns the index of the considered DVFS unit as stored in the
+ * corresponding DVFS context structure array
+ */
+unsigned int dvfs_unit_get_id (const dvfs_unit *unit);
