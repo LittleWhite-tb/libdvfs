@@ -59,4 +59,4 @@ clean:
 distclean: clean
 	rm -f *.so
 	rm -f test
-	rm -r ./doc
+	rm -rf ./doc
