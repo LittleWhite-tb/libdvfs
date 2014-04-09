@@ -29,7 +29,7 @@ int main(int argc, char **argv) {
    }
 
    // read the topology
-   dvfs_ctx *ctx = dvfs_start();
+   dvfs_ctx *ctx = dvfs_start(true);
 
    if (ctx == NULL) {
       printf("Failed to read topology information.\n");

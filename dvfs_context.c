@@ -32,7 +32,7 @@
 static unsigned int get_nb_cores();
 static void get_related_cores(unsigned int id, unsigned int **cores, unsigned int *nb_cores);
 
-dvfs_ctx *dvfs_start() {
+dvfs_ctx *dvfs_start(bool seq) {
    unsigned int nb_cores = get_nb_cores();
 
    // we can have at most one unit per core
@@ -73,7 +73,7 @@ dvfs_ctx *dvfs_start() {
       // open the cores corresponding to the ids
       ucores = malloc(nb_ucores * sizeof(*ucores));   // freeed on dvfs_unit_close call
       for (uc = 0; uc < nb_ucores; uc++) {
-         ucores[uc] = dvfs_core_open(ucores_ids[uc]);
+         ucores[uc] = dvfs_core_open(ucores_ids[uc], seq);
 
          if (ucores[uc] == NULL) {
             free (ucores_ids);

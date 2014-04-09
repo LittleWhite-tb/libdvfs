@@ -28,7 +28,7 @@ int main(int argc, char **argv)
    (void) argc;
    (void) argv;
 
-   dvfs_ctx *ctx = dvfs_start();
+   dvfs_ctx *ctx = dvfs_start(true);
    if (ctx == NULL)
    {
       perror ("DVFS Start");

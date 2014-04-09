@@ -16,13 +16,14 @@
 
 CC?=gcc
 CFLAGS=-O3 -g -Wall -Wextra -fPIC
+LDFLAGS=-lpthread -lrt
 
 all: libdvfs.so freqdomain
 
 .PHONY: all clean distclean install uninstall test doc
 
 libdvfs.so: dvfs_core.o dvfs_unit.o dvfs_context.o
-	$(CC) -shared $(CFLAGS) $^ -o $@
+	$(CC) -shared $(CFLAGS) $^ $(LDFLAGS) -o $@
 
 test: test_core test_cpu
 
@@ -33,7 +34,7 @@ test_cpu: test_cpu.o libdvfs.so
 	$(CC) $(CFLAGS) $^ -o $@
 
 freqdomain: freqdomain.o dvfs_core.o dvfs_unit.o dvfs_context.o
-	$(CC) $(CFLAGS) $^ -o $@
+	$(CC) $(CFLAGS) $^ $(LDFLAGS) -o $@
 
 %.o: %.c *.h
 	$(CC) $(CFLAGS) -c $< -o $@

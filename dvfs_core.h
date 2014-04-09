@@ -18,6 +18,9 @@
 
 #pragma once
 
+#include <fcntl.h>
+#include <semaphore.h>
+#include <stdbool.h>
 #include <stdio.h>
 
 /**
@@ -40,12 +43,15 @@ typedef struct {
 
    char init_gov[128];     //!< Governor used when core get initialised
    unsigned int init_freq; //!< Freqency used when core get initialised
+
+   sem_t *sem;             //!< Semaphore for sequentialization. Can be NULL.
 } dvfs_core;
 
 /**
  * Opens the Core context for the given core ID.
  *
  * @param id The id of the core to control.
+ * @param seq True when the frequency transitions must be sequentialized.
  *
  * @return an instanciated Core context for this core. May return NULL in case
  * of error. The error cases are often related to file opening (such as permission
@@ -53,7 +59,7 @@ typedef struct {
  *
  * @sa dvfs_core_close()
  */
-dvfs_core *dvfs_core_open(unsigned int id);
+dvfs_core *dvfs_core_open(unsigned int id, bool seq);
 
 /**
  * Closes properly an opened Core context.

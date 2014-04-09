@@ -48,12 +48,14 @@ typedef struct {
 /**
  * Starts controlling DVFS on the system.
  *
+ * @param seq Tells if the frequency transitions must be synchronized or not.
+ *
  * @return A new DVFS context used in the various functions or NULL in case of
  * error.
  *
  * @sa dvfs_stop()
  */
-dvfs_ctx *dvfs_start();
+dvfs_ctx *dvfs_start(bool seq);
 
 /**
  * Frees the memory associated to a DVFS context and restores the DVFS control

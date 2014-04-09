@@ -25,6 +25,8 @@
 
 #include "dvfs_core.h"
 
+// Semaphore name
+#define SEM_NAME "/libdvfsSeqSem"
 
 // These patterns should be used in snprintf functions
 #define SCALING_GOVERNOR_FILE_PATTERN "/sys/devices/system/cpu/cpu%u/cpufreq/scaling_governor"
@@ -32,7 +34,7 @@
 #define SCALING_AVAIL_FREQ_FILE_PATTERN "/sys/devices/system/cpu/cpu%u/cpufreq/scaling_available_frequencies"
 #define SCALING_SETSPEED_FILE_PATTERN "/sys/devices/system/cpu/cpu%u/cpufreq/scaling_setspeed"
 
-dvfs_core *dvfs_core_open(unsigned int id) {
+dvfs_core *dvfs_core_open(unsigned int id, bool seq) {
    char fname [256];
    char freqs [1024];
    char *strtokctx, *tmpstr;
@@ -49,6 +51,17 @@ dvfs_core *dvfs_core_open(unsigned int id) {
    core->fd_setf = NULL;
    memset (core->init_gov, 0, sizeof (core->init_gov));
    core->init_freq = 0;
+   core->sem = NULL;
+
+   // open / create the semaphore
+   if (seq) {
+      sem_t *sem = sem_open(SEM_NAME, O_CREAT, 0600, 1);
+      if (sem == SEM_FAILED) {
+         perror("Failed  to open libdvfs semaphore");
+      } else {
+         core->sem = sem;
+      }
+   }
 
    // Paranoid: Make sure the fname buffer is long enough
    assert (sizeof (SCALING_GOVERNOR_FILE_PATTERN) <= sizeof (fname));
@@ -56,23 +69,53 @@ dvfs_core *dvfs_core_open(unsigned int id) {
    /* fetch  the initial governor and frequency */
    snprintf (fname, sizeof (fname), SCALING_GOVERNOR_FILE_PATTERN, id);
 
+   if (core->sem != NULL) {
+      sem_wait(core->sem);
+   }
+
    fd = fopen(fname, "r");
    if (fd == NULL) {
+      if (core->sem != NULL) {
+         sem_post(core->sem);
+         sem_close(core->sem);
+         sem_unlink(SEM_NAME);
+      }
+
       free(core);
       return NULL;
    }
    fscanf(fd, "%127s", core->init_gov);
    fclose(fd);
 
+   if (core->sem != NULL) {
+      sem_post(core->sem);
+   }
+
    if (!strcmp(core->init_gov, "userspace")) {
       snprintf (fname, sizeof (fname), SCALING_CURFREQ_FILE_PATTERN, id);
+
+      if (core->sem != NULL) {
+         sem_wait(core->sem);
+      }
+
       fd = fopen(fname, "r");
       if (fd == NULL) {
+         
+         if (core->sem != NULL) {
+            sem_post(core->sem);
+            sem_close(core->sem);
+            sem_unlink(SEM_NAME);
+         }
+
          free(core);
          return NULL;
       }
       fscanf(fd, "%u", &core->init_freq);
       fclose(fd);
+
+      if (core->sem != NULL) {
+         sem_post(core->sem);
+      }
    }
 
    // Paranoid: Make sure the fname buffer is long enough
@@ -82,12 +125,22 @@ dvfs_core *dvfs_core_open(unsigned int id) {
    snprintf (fname, sizeof (fname), SCALING_AVAIL_FREQ_FILE_PATTERN, id);
    fd = fopen(fname, "r");
    if (fd == NULL) {
+      if (core->sem != NULL) {
+         sem_close(core->sem);
+         sem_unlink(SEM_NAME);
+      }
+
       free(core);
       return NULL;
    }
 
    // Set freqs memory to zero 
    if (fgets(freqs, sizeof(freqs), fd) == NULL) {
+      if (core->sem != NULL) {
+         sem_close(core->sem);
+         sem_unlink(SEM_NAME);
+      }
+
       fclose(fd);
       free(core);
       return NULL;
@@ -166,6 +219,12 @@ void dvfs_core_close(dvfs_core *core) {
       fclose(core->fd_getf), core->fd_getf = NULL;
    }
 
+   // close the semaphore
+   if (core->sem != NULL) {
+      sem_close(core->sem);
+      sem_unlink(SEM_NAME);
+   }
+
    free(core);
 }
 
@@ -177,17 +236,35 @@ unsigned int dvfs_core_get_gov (const dvfs_core *core, char *buf, size_t buf_len
    assert (sizeof (SCALING_GOVERNOR_FILE_PATTERN) <= sizeof (fname));
 
    snprintf (fname, sizeof (fname), SCALING_GOVERNOR_FILE_PATTERN, core->id);
-   fd = fopen (fname, "w");
+
+   if (core->sem != NULL) {
+      sem_wait(core->sem);
+   }
+
+   fd = fopen (fname, "r");
    if (fd == NULL) {
+      if (core->sem != NULL) {
+         sem_post(core->sem);
+      }
+
       return 0;
    }
 
    if (fgets (buf, buf_len, fd) == NULL) {
       fclose (fd);
+
+      if (core->sem != NULL) {
+         sem_post(core->sem);
+      }
+
       return 0;
    }
 
    fclose (fd);
+
+   if (core->sem != NULL) {
+      sem_post(core->sem);
+   }
 
    return 1;
 }
@@ -202,20 +279,44 @@ unsigned int dvfs_core_set_gov(const dvfs_core *core, const char *gov) {
    assert (sizeof (SCALING_GOVERNOR_FILE_PATTERN) <= sizeof (fname));
 
    snprintf (fname, sizeof (fname), SCALING_GOVERNOR_FILE_PATTERN, core->id);
+
+   if (core->sem != NULL) {
+      sem_wait(core->sem);
+   }
+
    fd = fopen (fname, "w");
    if (fd == NULL) {
+      if (core->sem != NULL) {
+         sem_post(core->sem);
+      }
+
       return 0;
    }
 
    if (fwrite (gov, sizeof (*gov), strlen (gov) + 1, fd) < strlen (gov) + 1) {
       fclose (fd);
+
+      if (core->sem != NULL) {
+         sem_post(core->sem);
+      }
+
       return 0;
    }
 
    if (fflush (fd) != 0) {
+      fclose(fd);
+
+      if (core->sem != NULL) {
+         sem_post(core->sem);
+      }
+
       return 0;
    }
    fclose (fd);
+
+   if (core->sem != NULL) {
+      sem_post(core->sem);
+   }
 
    return 1;
 }
@@ -246,13 +347,30 @@ unsigned int dvfs_core_set_freq(const dvfs_core *core, unsigned int freq) {
    assert (freqIsValid);
 #endif
 
+   if (core->sem != NULL) {
+      sem_wait(core->sem);
+   }
+
    if (fprintf(core->fd_setf, "%u", freq) < 0) {
       fprintf (stderr, "setf2\n");
+
+      if (core->sem != NULL) {
+         sem_post(core->sem);
+      }
+
       return 0;
    }
 
    if (fflush (core->fd_setf) != 0) {
+      if (core->sem != NULL) {
+         sem_post(core->sem);
+      }
+
       return 0;
+   }
+
+   if (core->sem != NULL) {
+      sem_post(core->sem);
    }
 
    return 1;
@@ -263,8 +381,20 @@ unsigned int dvfs_core_get_current_freq(const dvfs_core *core) {
 
    assert (core != NULL);
 
+   if (core->sem != NULL) {
+      sem_wait(core->sem);
+   }
+
    if (fscanf(core->fd_getf, "%u", &res) < 0) {
+      if (core->sem != NULL) {
+         sem_post(core->sem);
+      }
+
       return 0;
+   }
+
+   if (core->sem != NULL) {
+      sem_post(core->sem);
    }
 
    return res;
