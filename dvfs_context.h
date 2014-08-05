@@ -35,9 +35,9 @@
 
 
 /**
- * DVFS Context. Entry point for the library. Stores all the references to the 
+ * DVFS Context. Entry point for the library. Stores all the references to the
  * DVFS units available on the system.
- * 
+ *
  * @sa dvfs_unit()
  */
 typedef struct {
@@ -68,9 +68,10 @@ void dvfs_stop(dvfs_ctx *ctx);
 /**
  * Returns true if one of the DVFS unit on the system allows TurboBoost.
  *
- * @return True if TurboBoost is available on one of the DVFS unit.
+ * @return 1 if TurboBoost is available on one of the DVFS unit. 0 if TurboBoost is not available.
+ *         -1 if the information could not be read (likely because /proc/cpuinfo is not available), or can't be opened.
  */
-bool dvfs_has_TB();
+int dvfs_has_TB();
 
 /**
  * Sets the provided governor on all the DVFS units.

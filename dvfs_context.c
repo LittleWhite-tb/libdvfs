@@ -89,7 +89,7 @@ dvfs_ctx *dvfs_start(bool seq) {
       ctx->units[ctx->nb_units] = dvfs_unit_open(nb_ucores, ucores, ctx->nb_units);
       ctx->nb_units++;
    }
-      
+
    return ctx;
 }
 
@@ -105,19 +105,19 @@ void dvfs_stop(dvfs_ctx *ctx) {
    free(ctx);
 }
 
-bool dvfs_has_TB() {
+int dvfs_has_TB() {
    FILE* pFile = NULL;
    pFile = fopen("/proc/cpuinfo", "r");
-   if (pFile == NULL) { 
-      return false;
+   if (pFile == NULL) {
+      return -1;
    }
 
-   bool hasTB = false;
+   int hasTB = 0;
    char buf [2048];
    while (fgets(buf, sizeof(buf), pFile) != NULL) {
       if (!strncmp (buf, "flags", 5)) {
          if (strstr (buf, "ida") != NULL) {
-            hasTB = true;
+            hasTB = 1;
             break;
          }
       }
@@ -164,7 +164,7 @@ const dvfs_core *dvfs_get_core(const dvfs_ctx *ctx, unsigned int core_id) {
          if (ctx->units[i]->cores[j]->id == core_id) {
             return ctx->units[i]->cores[j];
          }
-      }  
+      }
    }
 
    return NULL;
@@ -181,7 +181,7 @@ const dvfs_unit *dvfs_get_unit(const dvfs_ctx *ctx, const dvfs_core *core) {
          if (ctx->units[i]->cores[j]->id == core->id) {
             return ctx->units[i];
          }
-      }  
+      }
    }
 
    return NULL;
@@ -189,17 +189,17 @@ const dvfs_unit *dvfs_get_unit(const dvfs_ctx *ctx, const dvfs_core *core) {
 
 static unsigned int get_nb_cores() {
    unsigned int nb_cores = 0;
-   
+
    nb_cores = sysconf(_SC_NPROCESSORS_ONLN);
    if (nb_cores < 1) // This sysconf is not always available
    {
       // Second try
       FILE* pFile = NULL;
       pFile = fopen("/proc/cpuinfo", "r");
-      if (pFile == NULL) { 
+      if (pFile == NULL) {
          return 0;
       }
-      
+
       char buf [2048];
       while (fgets(buf, sizeof(buf), pFile) != NULL) {
          if (!strncmp (buf, "processor", 9)) {
@@ -236,7 +236,7 @@ static void get_related_cores(unsigned int id, unsigned int **cores, unsigned in
          snprintf(relfile, sizeof(relfile), "/sys/devices/system/cpu/cpu%u/cpufreq/related_cpus", id);
       }
    }
-   
+
    if ((fd = fopen(relfile, "r")) == NULL) {
       *nb_cores = 0;
       *cores = NULL;
@@ -244,7 +244,7 @@ static void get_related_cores(unsigned int id, unsigned int **cores, unsigned in
    }
 
    // parse the file
-   // supports space-separated list of values and condensed format 
+   // supports space-separated list of values and condensed format
    // (comma-separated list with dash notation for contiguous lists)
    // only counting here
    *nb_cores = 0;
@@ -253,7 +253,7 @@ static void get_related_cores(unsigned int id, unsigned int **cores, unsigned in
       char sep;
 
       int fret = fscanf(fd, "%c", &sep);
-      
+
       if (fret == EOF || fret == 0 || sep == ' ' || sep == ',' || sep == '\n') {
          (*nb_cores)++;
          continue;
@@ -283,7 +283,7 @@ static void get_related_cores(unsigned int id, unsigned int **cores, unsigned in
       char sep;
 
       fscanf(fd, "%c", &sep);
-      
+
       if ( sep == '\n' ) // File finished, we guess, we have count everything
       {
          (*cores)[i++] = val;

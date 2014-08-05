@@ -36,7 +36,7 @@ int main(int argc, char **argv)
       perror ("Setting userspace");
       return -1;
    }
-   
+
    if (dvfs_set_freq(ctx, 2200000) == 0) {
       perror ("Setting frequency");
       return -1;
@@ -45,8 +45,8 @@ int main(int argc, char **argv)
    sleep(2);
 
    dvfs_stop(ctx);
-   
-   if (dvfs_has_TB()) {
+
+   if (dvfs_has_TB() == 1) {
       printf("This CPU has TurboBoost\n");
    }
 
