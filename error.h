@@ -20,4 +20,16 @@
 
 #include "dvfs_core.h"
 
+// Error code definition
+#define DVFS_ERROR_SUCCESS 0        /*!< No error */
+#define DVFS_ERROR_INVALID_ARG 1    /*!< Invalid argument passed to the function */
+#define DVFS_ERROR_FILE_ERROR 2     /*!< File error (use strerrno to have more information) */
+#define DVFS_ERROR_UNKNOWN 3        /** Unknown error
+                                        (all greater error code results in this) */
+
+/**
+ * Returns a string describing the error number
+ * @param errno error number
+ * @return a string describing the error. You don't have to free this.
+ */
 const char* dvfs_strerrno(int errno);

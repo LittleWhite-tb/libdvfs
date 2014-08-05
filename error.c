@@ -20,28 +20,29 @@
 
 #include <stdlib.h>
 
-char* errors[] =
+#define NB_ERROR (DVFS_ERROR_UNKNOWN+1)
+
+char* errors[NB_ERROR] =
 {
     "No error", // Never move this. Index 0 is reserved !
     "Invalid argument (did you pass a NULL pointer?)",
-    "Fail to open file",
+    "File error",
     "Unknown error" // This is also reserved as the last error
 };
 
 const char* dvfs_strerrno(int errno)
 {
     // All errors should be negative
-    if (errno >= 0)
+    if (errno >= DVFS_ERROR_SUCCESS)
     {
         return errors[0];
     }
 
-    size_t errorIndex = abs(errno);
-    size_t nb_errors = sizeof(errors)/sizeof(char*);
-    if ( errorIndex >= nb_errors  ) // This error code is not handle
+    int errorIndex = abs(errno);
+    if ( errorIndex >= NB_ERROR  ) // This error code is not handle
                                     // Index out of bound
     {
-        return errors[nb_errors-1];
+        return errors[NB_ERROR-1];
     }
 
     return errors[errorIndex];
