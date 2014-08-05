@@ -22,7 +22,7 @@ all: libdvfs.so freqdomain
 
 .PHONY: all clean distclean install uninstall test doc
 
-libdvfs.so: dvfs_core.o dvfs_unit.o dvfs_context.o
+libdvfs.so: dvfs_core.o dvfs_unit.o dvfs_context.o error.o
 	$(CC) -shared $(CFLAGS) $^ $(LDFLAGS) -o $@
 
 test: test_core test_cpu
@@ -33,7 +33,7 @@ test_core: test_core.o libdvfs.so
 test_cpu: test_cpu.o libdvfs.so
 	$(CC) $(CFLAGS) $^ -o $@
 
-freqdomain: freqdomain.o dvfs_core.o dvfs_unit.o dvfs_context.o
+freqdomain: freqdomain.o dvfs_core.o dvfs_unit.o dvfs_context.o error.o
 	$(CC) $(CFLAGS) $^ $(LDFLAGS) -o $@
 
 %.o: %.c *.h
