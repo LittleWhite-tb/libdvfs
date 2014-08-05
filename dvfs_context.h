@@ -1,6 +1,6 @@
 /*
  * libdvfs - A light library to set CPU governor and frequency
- * Copyright (C) 2013 Universite de Versailles
+ * Copyright (C) 2013-2014 Universite de Versailles
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by

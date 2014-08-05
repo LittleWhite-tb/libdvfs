@@ -1,6 +1,6 @@
 /*
  * libdvfs - A light library to set CPU governor and frequency
- * Copyright (C) 2013 Universite de Versailles
+ * Copyright (C) 2013-2014 Universite de Versailles
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,7 +26,7 @@
 /**
  * @file dvfs_core.h
  *
- * Structures and functions to change frequency at the scale of a CPU 
+ * Structures and functions to change frequency at the scale of a CPU
  * core.
  */
 
@@ -38,7 +38,7 @@ typedef struct {
    unsigned int nb_freqs;  //!< Number of frequencies available for this core
    unsigned int *freqs;    //!< Available frequencies for this core, sorted by increasing order
 
-   FILE *fd_setf;          //!< File descriptor toward the \c set_speed file 
+   FILE *fd_setf;          //!< File descriptor toward the \c set_speed file
    FILE *fd_getf;          //!< Descriptor toward the \c cur_freq file
 
    char init_gov[128];     //!< Governor used when core get initialised
@@ -108,7 +108,7 @@ unsigned int dvfs_core_set_freq(const dvfs_core *core, unsigned int freq);
  * frequency actually set for the core, use instead \p dvfs_unit_get_freq().
  *
  * @param core The CPU core.
- * 
+ *
  * @return The frequency selected for this core or 0 in case of error.
  *
  * @sa dvfs_unit_get_freq()
@@ -120,7 +120,7 @@ unsigned int dvfs_core_get_current_freq(const dvfs_core *core);
  *
  * @param core The CPU core.
  * @param freq_id The id of the frequency with respect to the order in the freqs internal array
- * 
+ *
  * @return Upon successful completion the corresponding frequency is return. 0 is returned in case the given freq_id parameter is out of bounds.
  */
 unsigned int dvfs_core_get_freq(const dvfs_core *core, unsigned int freq_id);

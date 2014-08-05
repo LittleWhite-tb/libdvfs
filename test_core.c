@@ -1,6 +1,6 @@
 /*
  * libdvfs - A light library to set CPU governor and frequency
- * Copyright (C) 2013 Universite de Versailles
+ * Copyright (C) 2013-2014 Universite de Versailles
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -36,14 +36,14 @@ int main(int argc, char **argv)
    }
 
    const dvfs_core *core = dvfs_get_core(ctx, 0);
-   
+
    if (core == NULL) {
       perror ("Get core");
       return -1;
    }
 
    unsigned int nb_freqs = dvfs_core_get_nb_freqs (core);
-   
+
    if (nb_freqs == 0) {
       perror ("get freq");
       return -1;
@@ -57,7 +57,7 @@ int main(int argc, char **argv)
       perror ("get unit");
       return -1;
    }
-   
+
    if (dvfs_unit_set_gov(unit, "userspace") == 0) {
       perror ("Set governor");
       return -1;
@@ -70,6 +70,6 @@ int main(int argc, char **argv)
    sleep(2);
 
    dvfs_stop(ctx);
-   
+
    return 0;
 }
