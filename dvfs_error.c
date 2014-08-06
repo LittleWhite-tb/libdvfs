@@ -16,29 +16,33 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "error.h"
+#include "dvfs_error.h"
 
 #include <stdlib.h>
 
 #define NB_ERROR (DVFS_ERROR_UNKNOWN+1)
 
-char* errors[NB_ERROR] =
+const char* errors[NB_ERROR] =
 {
     "No error", // Never move this. Index 0 is reserved !
     "Invalid argument (did you pass a NULL pointer?)",
     "File error",
+    "Memory allocation failed",
+    "Fail to get related core",
+    "Failure with semaphore functions (in dvfs_core)",
+    "Insufficient space in buffer to complete the operation",
     "Unknown error" // This is also reserved as the last error
 };
 
-const char* dvfs_strerrno(int errno)
+const char* dvfs_strerrno(int id_error)
 {
     // All errors should be negative
-    if (errno >= DVFS_ERROR_SUCCESS)
+    if (id_error >= DVFS_SUCCESS)
     {
         return errors[0];
     }
 
-    int errorIndex = abs(errno);
+    int errorIndex = abs(id_error);
     if ( errorIndex >= NB_ERROR  ) // This error code is not handle
                                     // Index out of bound
     {

@@ -21,15 +21,19 @@
 #include "dvfs_core.h"
 
 // Error code definition
-#define DVFS_ERROR_SUCCESS 0        /*!< No error */
-#define DVFS_ERROR_INVALID_ARG 1    /*!< Invalid argument passed to the function */
-#define DVFS_ERROR_FILE_ERROR 2     /*!< File error (use strerrno to have more information) */
-#define DVFS_ERROR_UNKNOWN 3        /** Unknown error
-                                        (all greater error code results in this) */
+#define DVFS_SUCCESS 0                            /*!< No error */
+#define DVFS_ERROR_INVALID_ARG 1                  /*!< Invalid argument passed to the function */
+#define DVFS_ERROR_FILE_ERROR 2                   /*!< File error (use strerrno to have more information) */
+#define DVFS_ERROR_MEM_ALLOC_FAILED 3             /*!< Memory allocation failed */
+#define DVFS_ERROR_RELATED_CORE_UNAVAILABLE 4     /*!< Failed to get related core */
+#define DVFS_ERROR_SEMAPHORE_FAILURE 5            /*!< Failure related to semaphore function */
+#define DVFS_ERROR_BUFFER_TOO_SHORT 6             /*!< A buffer was not big enough for the operation */
+#define DVFS_ERROR_UNKNOWN 7                      /** Unknown error
+                                                      (all greater error code results in this) */
 
 /**
  * Returns a string describing the error number
- * @param errno error number
+ * @param id_error error number
  * @return a string describing the error. You don't have to free this.
  */
-const char* dvfs_strerrno(int errno);
+const char* dvfs_strerrno(int id_error);

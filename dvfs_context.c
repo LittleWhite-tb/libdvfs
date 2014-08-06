@@ -17,6 +17,7 @@
  */
 
 #include "dvfs_context.h"
+#include "dvfs_error.h"
 
 #include <assert.h>
 #include <cpuid.h>
@@ -73,9 +74,9 @@ dvfs_ctx *dvfs_start(bool seq) {
       // open the cores corresponding to the ids
       ucores = malloc(nb_ucores * sizeof(*ucores));   // freeed on dvfs_unit_close call
       for (uc = 0; uc < nb_ucores; uc++) {
-         ucores[uc] = dvfs_core_open(ucores_ids[uc], seq);
+         int result = dvfs_core_open(&ucores[uc],ucores_ids[uc], seq);
 
-         if (ucores[uc] == NULL) {
+         if (result != DVFS_SUCCESS) {
             free (ucores_ids);
             free (ucores);
             free (ctx->units);

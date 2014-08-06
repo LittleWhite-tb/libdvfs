@@ -24,6 +24,7 @@
 #include <unistd.h>
 
 #include "dvfs_core.h"
+#include "dvfs_error.h"
 
 // Semaphore name
 #define SEM_NAME "/libdvfsSeqSem"
@@ -34,156 +35,232 @@
 #define SCALING_AVAIL_FREQ_FILE_PATTERN "/sys/devices/system/cpu/cpu%u/cpufreq/scaling_available_frequencies"
 #define SCALING_SETSPEED_FILE_PATTERN "/sys/devices/system/cpu/cpu%u/cpufreq/scaling_setspeed"
 
-dvfs_core *dvfs_core_open(unsigned int id, bool seq) {
-   char fname [256];
-   char freqs [1024];
-   char *strtokctx, *tmpstr;
-   FILE *fd;
-   unsigned int i;
+static void init_dvfs_core(dvfs_core_handle core_handle, unsigned int id, bool seq)
+{
+    assert(core_handle);
 
-   dvfs_core *core = malloc(sizeof(*core));
+    // A well initialized struct avoids tons of errors, trust me
+    core_handle->id = id;
+    core_handle->nb_freqs = 0;
+    core_handle->freqs = NULL;
+    core_handle->fd_getf = NULL;
+    core_handle->fd_setf = NULL;
+    memset (core_handle->init_gov, 0, sizeof (core_handle->init_gov));
+    core_handle->init_freq = 0;
+    core_handle->sem = NULL;
 
-   // A well initialized struct avoids tons of errors, trust me
-   core->id = id;
-   core->nb_freqs = 0;
-   core->freqs = NULL;
-   core->fd_getf = NULL;
-   core->fd_setf = NULL;
-   memset (core->init_gov, 0, sizeof (core->init_gov));
-   core->init_freq = 0;
-   core->sem = NULL;
+    // open / create the semaphore
+    if (seq) {
+       sem_t *sem = sem_open(SEM_NAME, O_CREAT, 0600, 1);
+       if (sem == SEM_FAILED)
+       {
+          perror("Failed  to open libdvfs semaphore (frequency transitions will not be sequentialized)");
+          // Even if the semaphore failed, we will continue.
+       }
+       else
+       {
+          core_handle->sem = sem;
+       }
+    }
+}
 
-   // open / create the semaphore
-   if (seq) {
-      sem_t *sem = sem_open(SEM_NAME, O_CREAT, 0600, 1);
-      if (sem == SEM_FAILED) {
-         perror("Failed  to open libdvfs semaphore");
-      } else {
-         core->sem = sem;
-      }
-   }
+static int read_governor(dvfs_core_handle core_handle)
+{
+    char fname [256] = {0};
 
-   // Paranoid: Make sure the fname buffer is long enough
-   assert (sizeof (SCALING_GOVERNOR_FILE_PATTERN) <= sizeof (fname));
+    assert(core_handle);
 
-   /* fetch  the initial governor and frequency */
-   snprintf (fname, sizeof (fname), SCALING_GOVERNOR_FILE_PATTERN, id);
+    // Paranoid: Make sure the fname buffer is long enough
+    assert (sizeof (SCALING_GOVERNOR_FILE_PATTERN) <= sizeof (fname));
 
-   if (core->sem != NULL) {
-      sem_wait(core->sem);
-   }
+    /* fetch  the initial governor and frequency */
+    if ( snprintf (fname, sizeof (fname), SCALING_GOVERNOR_FILE_PATTERN, core_handle->id) >= (int)sizeof(fname) )
+    {
+        return DVFS_ERROR_BUFFER_TOO_SHORT;
+        // No cleanup to do
+    }
 
-   fd = fopen(fname, "r");
-   if (fd == NULL) {
-      if (core->sem != NULL) {
-         sem_post(core->sem);
-         sem_close(core->sem);
-         sem_unlink(SEM_NAME);
-      }
+    if (core_handle->sem != NULL) {
+       sem_wait(core_handle->sem);
+    }
 
-      free(core);
-      return NULL;
-   }
-   fscanf(fd, "%127s", core->init_gov);
-   fclose(fd);
+    FILE* fd = fopen(fname, "r");
+    if (fd == NULL)
+    {
+       sem_post(core_handle->sem);
+       return DVFS_ERROR_FILE_ERROR;
+    }
+    fscanf(fd, "%127s", core_handle->init_gov);
+    fclose(fd);
 
-   if (core->sem != NULL) {
-      sem_post(core->sem);
-   }
+    if (core_handle->sem != NULL) {
+       sem_post(core_handle->sem);
+    }
 
-   if (!strcmp(core->init_gov, "userspace")) {
-      snprintf (fname, sizeof (fname), SCALING_CURFREQ_FILE_PATTERN, id);
 
-      if (core->sem != NULL) {
-         sem_wait(core->sem);
-      }
+    return DVFS_SUCCESS;
+}
 
-      fd = fopen(fname, "r");
-      if (fd == NULL) {
+static int read_cur_freq(dvfs_core_handle core_handle)
+{
+    char fname [256] = {0};
 
-         if (core->sem != NULL) {
-            sem_post(core->sem);
-            sem_close(core->sem);
-            sem_unlink(SEM_NAME);
-         }
+    assert(core_handle);
 
-         free(core);
-         return NULL;
-      }
-      fscanf(fd, "%u", &core->init_freq);
-      fclose(fd);
+    assert (sizeof (SCALING_CURFREQ_FILE_PATTERN) <= sizeof (fname));
+    if ( snprintf (fname, sizeof (fname), SCALING_CURFREQ_FILE_PATTERN, core_handle->id) >= (int)sizeof(fname) )
+    {
+        return DVFS_ERROR_BUFFER_TOO_SHORT;
+        // No cleanup to do here
+    }
 
-      if (core->sem != NULL) {
-         sem_post(core->sem);
-      }
-   }
+    if (core_handle->sem != NULL) {
+       sem_wait(core_handle->sem);
+    }
 
-   // Paranoid: Make sure the fname buffer is long enough
-   assert (sizeof (SCALING_AVAIL_FREQ_FILE_PATTERN) <= sizeof (fname));
+    FILE* fd = fopen(fname, "r");
+    if (fd == NULL)
+    {
+        sem_post(core_handle->sem);
+        return DVFS_ERROR_FILE_ERROR;
+    }
+    fscanf(fd, "%u", &core_handle->init_freq);
+    fclose(fd);
 
-   /* parse all the frequencies */
-   snprintf (fname, sizeof (fname), SCALING_AVAIL_FREQ_FILE_PATTERN, id);
-   fd = fopen(fname, "r");
-   if (fd == NULL) {
-      if (core->sem != NULL) {
-         sem_close(core->sem);
-         sem_unlink(SEM_NAME);
-      }
+    if (core_handle->sem != NULL) {
+       sem_post(core_handle->sem);
+    }
 
-      free(core);
-      return NULL;
-   }
+    return DVFS_SUCCESS;
+}
 
-   // Set freqs memory to zero
-   if (fgets(freqs, sizeof(freqs), fd) == NULL) {
-      if (core->sem != NULL) {
-         sem_close(core->sem);
-         sem_unlink(SEM_NAME);
-      }
+int read_available_freq(dvfs_core_handle core_handle)
+{
+    char fname [256] = {0};
 
-      fclose(fd);
-      free(core);
-      return NULL;
-   }
-   fclose(fd);
+    assert(core_handle);
+    // Paranoid: Make sure the fname buffer is long enough
+    assert (sizeof (SCALING_AVAIL_FREQ_FILE_PATTERN) <= sizeof (fname));
 
-   bool inFreq = false;
-   // Count freqs number
-   for (tmpstr = freqs; *tmpstr; tmpstr++) {
-      if (*tmpstr >= '0' && *tmpstr <= '9') {
-         if (inFreq) {
-            continue;
-         }
-         core->nb_freqs++;
-         inFreq = true;
-      } else {
-         inFreq = false;
-      }
-   }
+    /* parse all the frequencies */
+    if ( snprintf (fname, sizeof (fname), SCALING_AVAIL_FREQ_FILE_PATTERN, core_handle->id) >= (int)sizeof(fname))
+    {
+        return DVFS_ERROR_BUFFER_TOO_SHORT;
+    }
 
-   // Paranoid: No need to syscall malloc if no freqs are available
-   assert (core->nb_freqs > 0);
+    FILE* fd = fopen(fname, "r");
+    if (fd == NULL)
+    {
+        return DVFS_ERROR_FILE_ERROR;
+    }
 
-   core->freqs = malloc(core->nb_freqs * sizeof(*core->freqs));
+    // Set freqs memory to zero
+    char freqs [1024] = {0};
+    char* fgets_error = fgets(freqs, sizeof(freqs), fd);
+    fclose(fd);
 
-   for (i = 0, tmpstr = strtok_r(freqs, " ", &strtokctx);
-        i < core->nb_freqs && tmpstr != NULL;
-        i++, tmpstr = strtok_r(NULL, " ", &strtokctx))
+    if (fgets_error == NULL)
+    {
+       return DVFS_ERROR_FILE_ERROR;
+    }
+
+    char *tmpstr=NULL;
+    bool inFreq = false;
+    // Count freqs number
+    for (tmpstr = freqs; *tmpstr; tmpstr++) {
+       if (*tmpstr >= '0' && *tmpstr <= '9') {
+          if (inFreq) {
+             continue;
+          }
+          core_handle->nb_freqs++;
+          inFreq = true;
+       } else {
+          inFreq = false;
+       }
+    }
+
+    // Paranoid: No need to syscall malloc if no freqs are available
+    assert (core_handle->nb_freqs > 0);
+
+    core_handle->freqs = malloc(core_handle->nb_freqs * sizeof(*core_handle->freqs));
+    if ( core_handle->freqs == NULL )
+    {
+        return DVFS_ERROR_MEM_ALLOC_FAILED;
+    }
+
+    unsigned int i=0;
+    char *strtokctx=NULL;
+    for (i = 0, tmpstr = strtok_r(freqs, " ", &strtokctx);
+         i < core_handle->nb_freqs && tmpstr != NULL;
+         i++, tmpstr = strtok_r(NULL, " ", &strtokctx))
+    {
+       char *end;
+       core_handle->freqs[core_handle->nb_freqs - i - 1] = strtol (tmpstr, &end, 10);
+
+       // Paranoid: Check that what we have read in the file is valid
+       assert (end != tmpstr);
+    }
+    assert (i == core_handle->nb_freqs);
+
+    return DVFS_SUCCESS;
+}
+
+int dvfs_core_open(dvfs_core_handle* p_core_handle, unsigned int id, bool seq) {
+   char fname [256] = {0};
+
+   int id_error=DVFS_SUCCESS;
+
+   if ( p_core_handle == NULL )
    {
-      char *end;
-      core->freqs[core->nb_freqs - i - 1] = strtol (tmpstr, &end, 10);
-
-      // Paranoid: Check that what we have read in the file is valid
-      assert (end != tmpstr);
+        return DVFS_ERROR_INVALID_ARG;
    }
-   assert (i == core->nb_freqs);
+
+   *p_core_handle = malloc(sizeof(dvfs_core));
+   if ( p_core_handle == NULL )
+   {
+       return DVFS_ERROR_MEM_ALLOC_FAILED;
+   }
+
+   init_dvfs_core(*p_core_handle,id,seq);
+
+   // Gets initial governor (to put it back later)
+   id_error = read_governor(*p_core_handle);
+   if ( id_error != DVFS_SUCCESS )
+   {
+       dvfs_core_close(*p_core_handle);
+       return id_error;
+   }
+
+   if (!strcmp((*p_core_handle)->init_gov, "userspace")) // If it was userspace, we have
+                                             // to gets initial frequency
+                                             // to put it back later
+   {
+      id_error = read_cur_freq(*p_core_handle);
+      if ( id_error != DVFS_SUCCESS )
+      {
+          dvfs_core_close(*p_core_handle);
+          return id_error;
+      }
+   }
+
+   id_error = read_available_freq(*p_core_handle);
+   if ( id_error != DVFS_SUCCESS)
+   {
+       dvfs_core_close(*p_core_handle);
+       return id_error;
+   }
 
    // Paranoid: Make sure the fname buffer is long enough
    assert (sizeof (SCALING_SETSPEED_FILE_PATTERN) <= sizeof (fname));
 
    // open the frequency setter file
-   snprintf (fname, sizeof (fname), SCALING_SETSPEED_FILE_PATTERN, id);
-   core->fd_setf = fopen(fname, "w");
+   if ( snprintf (fname, sizeof (fname), SCALING_SETSPEED_FILE_PATTERN, id) >= (int)sizeof(fname))
+   {
+      dvfs_core_close(*p_core_handle);
+      return DVFS_ERROR_BUFFER_TOO_SHORT;
+   }
+
+   (*p_core_handle)->fd_setf = fopen(fname, "w");
    // don't check the result here to allow instantiating the library without any
    // write access. Only set freq will fail (with no trouble).
 
@@ -191,23 +268,32 @@ dvfs_core *dvfs_core_open(unsigned int id, bool seq) {
    assert (sizeof (SCALING_CURFREQ_FILE_PATTERN) <= sizeof (fname));
 
    // same for the frequency getter file
-   snprintf(fname, sizeof(fname), SCALING_CURFREQ_FILE_PATTERN, id);
-   core->fd_getf = fopen(fname, "r");
-   if (core->fd_getf == NULL) {
-      dvfs_core_close(core);
-      return NULL;
+   if ( snprintf(fname, sizeof(fname), SCALING_CURFREQ_FILE_PATTERN, id) >= (int)sizeof(fname) )
+   {
+      dvfs_core_close(*p_core_handle);
+      return DVFS_ERROR_BUFFER_TOO_SHORT;
    }
 
-   return core;
+   (*p_core_handle)->fd_getf = fopen(fname, "r");
+   if ((*p_core_handle)->fd_getf == NULL) {
+      dvfs_core_close(*p_core_handle);
+      return DVFS_ERROR_FILE_ERROR;
+   }
+
+   return DVFS_SUCCESS;
 }
 
 void dvfs_core_close(dvfs_core *core) {
    assert (core != NULL);
-   // restore the previous state
-   dvfs_core_set_gov(core, core->init_gov);
 
-   if (strcmp(core->init_gov, "userspace") == 0) {
-      dvfs_core_set_freq(core, core->init_freq);
+   // restore the previous state
+   if (core->init_gov)
+   {
+       dvfs_core_set_gov(core, core->init_gov);
+
+       if (strcmp(core->init_gov, "userspace") == 0) {
+          dvfs_core_set_freq(core, core->init_freq);
+       }
    }
 
    free(core->freqs), core->freqs = NULL;
