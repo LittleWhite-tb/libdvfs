@@ -56,7 +56,7 @@ typedef struct {
  * @sa dvfs_unit_close()
  * @sa dvfs_core
  */
-dvfs_unit *dvfs_unit_open(unsigned int nb_cores, dvfs_core **cores, unsigned int unit_id);
+int dvfs_unit_open(dvfs_unit** ppUnit, unsigned int nb_cores, dvfs_core **cores, unsigned int unit_id);
 
 /**
  * Frees the memory associated to a DVFS unit and restore their DVFS state. You
@@ -66,7 +66,7 @@ dvfs_unit *dvfs_unit_open(unsigned int nb_cores, dvfs_core **cores, unsigned int
  *
  * @sa dvfs_unit_open()
  */
-void dvfs_unit_close(dvfs_unit *unit);
+int dvfs_unit_close(dvfs_unit *unit);
 
 /**
  * Sets a governor on all the cores we are in charge of.
@@ -76,7 +76,7 @@ void dvfs_unit_close(dvfs_unit *unit);
  *
  * @return Upon successful completion 1 is return. Otherwise, 0 is return and errno is set appropriately.
  */
-unsigned int dvfs_unit_set_gov(const dvfs_unit *unit, const char *gov);
+int dvfs_unit_set_gov(const dvfs_unit *unit, const char *gov);
 
 /**
  * Sets the given frequency on all the unit cores. The effect is unknown if the
@@ -87,7 +87,7 @@ unsigned int dvfs_unit_set_gov(const dvfs_unit *unit, const char *gov);
  *
  * @return Upon successful completion 1 is return. Otherwise, 0 is return and errno is set appropriately.
  */
-unsigned int dvfs_unit_set_freq(const dvfs_unit *unit, unsigned int freq);
+int dvfs_unit_set_freq(const dvfs_unit *unit, unsigned int freq);
 
 /**
  * Returns the core with the given id if it is part of this DVFS unit, or NULL
@@ -98,7 +98,7 @@ unsigned int dvfs_unit_set_freq(const dvfs_unit *unit, unsigned int freq);
  *
  * @return The core with the given id or NULL if the core is not within \p unit.
  */
-const dvfs_core *dvfs_unit_get_core(const dvfs_unit *unit, unsigned int id);
+int dvfs_unit_get_core(const dvfs_unit *unit, dvfs_core_handle *p_core_handle, unsigned int id);
 
 /**
  * Returns the frequency currently set for the current DVFS unit.
@@ -107,10 +107,10 @@ const dvfs_core *dvfs_unit_get_core(const dvfs_unit *unit, unsigned int id);
  *
  * @return The frequency currently set for the whole unit.
  */
-unsigned int dvfs_unit_get_freq(const dvfs_unit *unit);
+int dvfs_unit_get_freq(const dvfs_unit *unit, unsigned int* pFreq);
 
 /**
  * Returns the index of the considered DVFS unit as stored in the
  * corresponding DVFS context structure array
  */
-unsigned int dvfs_unit_get_id (const dvfs_unit *unit);
+int dvfs_unit_get_id(const dvfs_unit *unit, unsigned int *pID);

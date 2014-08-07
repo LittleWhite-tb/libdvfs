@@ -15,22 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifdef __cplusplus
-extern "C" {
+
+#ifndef NDEBUG
+
 #endif
-
-/**
- * @file libdvfs.h
- *
- * Libdvfs wrapper file to include in a project.
- */
-
-#include "dvfs_core.h"
-#include "dvfs_unit.h"
-#include "dvfs_context.h"
-#include "dvfs_error.h"
-
-#ifdef __cplusplus
-}
-#endif
-

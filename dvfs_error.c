@@ -20,7 +20,7 @@
 
 #include <stdlib.h>
 
-#define NB_ERROR (DVFS_ERROR_UNKNOWN+1)
+#define NB_ERROR (DVFS_ERROR_UNKNOWN*-1+1)
 
 const char* errors[NB_ERROR] =
 {
@@ -31,10 +31,14 @@ const char* errors[NB_ERROR] =
     "Fail to get related core",
     "Failure with semaphore functions (in dvfs_core)",
     "Insufficient space in buffer to complete the operation",
+    "File to set frequency is not available",
+    "Freq ID is not available",
+    "Core ID is not available",
+    "Core not findable in DVFS units of this CPU",
     "Unknown error" // This is also reserved as the last error
 };
 
-const char* dvfs_strerrno(int id_error)
+const char* dvfs_strerror(int id_error)
 {
     // All errors should be negative
     if (id_error >= DVFS_SUCCESS)

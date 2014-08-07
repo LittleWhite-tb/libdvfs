@@ -18,6 +18,7 @@
 
 #include "dvfs_context.h"
 #include "dvfs_error.h"
+#include "dvfs_debug.h"
 
 #include <assert.h>
 #include <cpuid.h>
@@ -33,13 +34,29 @@
 static unsigned int get_nb_cores();
 static void get_related_cores(unsigned int id, unsigned int **cores, unsigned int *nb_cores);
 
-dvfs_ctx *dvfs_start(bool seq) {
+int dvfs_start(dvfs_ctx** ppCtx, bool seq) {
    unsigned int nb_cores = get_nb_cores();
+   DVFS_DEBUG("DVFS Start\n");
+
+   if ( ppCtx == NULL )
+   {
+       return DVFS_ERROR_INVALID_ARG;
+   }
 
    // we can have at most one unit per core
-   dvfs_ctx *ctx = malloc(sizeof(*ctx));
-   ctx->nb_units = 0;
-   ctx->units = malloc(nb_cores * sizeof(*ctx->units));
+   *ppCtx = malloc(sizeof(*(*ppCtx)));
+   if ( *ppCtx == NULL )
+   {
+       return DVFS_ERROR_MEM_ALLOC_FAILED;
+   }
+
+   (*ppCtx)->nb_units = 0;
+   (*ppCtx)->units = malloc(nb_cores * sizeof(*(*ppCtx)->units));
+   if ( (*ppCtx)->units == NULL )
+   {
+       dvfs_stop(*ppCtx);
+       return DVFS_ERROR_MEM_ALLOC_FAILED;
+   }
 
    unsigned int c;
    for (c = 0; c < nb_cores; c++) {
@@ -50,8 +67,9 @@ dvfs_ctx *dvfs_start(bool seq) {
 
       // is this core already present in a unit?
       bool known = false;
-      for (u = 0; u < ctx->nb_units; u++) {
-         if (dvfs_unit_get_core(ctx->units[u], c) != NULL) {
+      for (u = 0; u < (*ppCtx)->nb_units; u++) {
+         dvfs_core* pCore = NULL;
+         if (dvfs_unit_get_core((*ppCtx)->units[u], &pCore, c) == DVFS_SUCCESS) {
             known = true;
             break;
          }
@@ -65,45 +83,71 @@ dvfs_ctx *dvfs_start(bool seq) {
       get_related_cores(c, &ucores_ids, &nb_ucores);
 
       if (ucores_ids == NULL) {
-         fprintf(stderr, "Failed to get related cores of core %u\n", c);
-         free(ctx->units);
-         free (ctx);
-         return NULL;
+         fprintf(stderr, "Failed to get related cores of core %u\n", c); // TODO
+         dvfs_stop(*ppCtx);
+         return DVFS_ERROR_RELATED_CORE_UNAVAILABLE;
       }
 
       // open the cores corresponding to the ids
       ucores = malloc(nb_ucores * sizeof(*ucores));   // freeed on dvfs_unit_close call
+      if ( ucores == NULL )
+      {
+         free(ucores_ids);
+         dvfs_stop(*ppCtx);
+         return DVFS_ERROR_MEM_ALLOC_FAILED;
+      }
+
       for (uc = 0; uc < nb_ucores; uc++) {
          int result = dvfs_core_open(&ucores[uc],ucores_ids[uc], seq);
 
          if (result != DVFS_SUCCESS) {
             free (ucores_ids);
             free (ucores);
-            free (ctx->units);
-            free (ctx);
-            return NULL;
+            dvfs_stop(*ppCtx);
+            return result;
          }
       }
       free(ucores_ids);
 
       // create the unit
-      ctx->units[ctx->nb_units] = dvfs_unit_open(nb_ucores, ucores, ctx->nb_units);
-      ctx->nb_units++;
+      int unit_result = dvfs_unit_open(&(*ppCtx)->units[(*ppCtx)->nb_units], nb_ucores, ucores, (*ppCtx)->nb_units);
+      if ( unit_result != DVFS_SUCCESS )
+      {
+          dvfs_stop(*ppCtx);
+          return unit_result;
+      }
+      (*ppCtx)->nb_units++;
    }
 
-   return ctx;
+   return DVFS_SUCCESS;
 }
 
-void dvfs_stop(dvfs_ctx *ctx) {
+int dvfs_stop(dvfs_ctx *ctx) {
    unsigned int i;
-
+   int id_result = DVFS_SUCCESS;
+   DVFS_DEBUG("DVFS Stop\n");
    assert(ctx != NULL);
-
-   for (i = 0; i < ctx->nb_units; i++) {
-      dvfs_unit_close(ctx->units[i]);
+   if (ctx == NULL )
+   {
+       return DVFS_ERROR_INVALID_ARG;
    }
+
+   for (i = 0; i < ctx->nb_units; i++)
+   {
+      if ( ctx->units[i])
+      {
+          int cres = dvfs_unit_close(ctx->units[i]);
+          if ( cres != DVFS_SUCCESS )
+          {
+              id_result = cres;
+          }
+      }
+   }
+
    free(ctx->units);
    free(ctx);
+
+   return id_result;
 }
 
 int dvfs_has_TB() {
@@ -128,64 +172,93 @@ int dvfs_has_TB() {
    return hasTB;
 }
 
-unsigned int dvfs_set_gov(const dvfs_ctx *ctx, const char *gov) {
+int dvfs_set_gov(const dvfs_ctx *ctx, const char *gov) {
    unsigned int i;
-   unsigned int ret = 1;
+   int ret = DVFS_SUCCESS;
 
    assert(ctx != NULL);
+   assert(gov != NULL);
+   if ( ctx == NULL || gov == NULL)
+   {
+       return DVFS_ERROR_INVALID_ARG;
+   }
 
    for (i = 0; i < ctx->nb_units; i++) {
-      ret &= dvfs_unit_set_gov(ctx->units[i], gov);
+      int cret = dvfs_unit_set_gov(ctx->units[i], gov);
+      if ( cret != DVFS_SUCCESS )
+      {
+        ret = cret;
+      }
    }
 
    return ret;
 }
 
-unsigned int dvfs_set_freq(dvfs_ctx *ctx, unsigned int freq) {
+int dvfs_set_freq(dvfs_ctx *ctx, unsigned int freq) {
    unsigned int i;
-   unsigned int ret = 1;
+   int ret = DVFS_SUCCESS;
 
    assert(ctx != NULL);
+   if ( ctx == NULL )
+   {
+       return DVFS_ERROR_INVALID_ARG;
+   }
 
    for (i = 0; i < ctx->nb_units; i++) {
-      ret &= dvfs_unit_set_freq(ctx->units[i], freq);
+      int cret = dvfs_unit_set_freq(ctx->units[i], freq);
+      if ( cret != DVFS_SUCCESS )
+      {
+          ret = cret;
+      }
    }
 
    return ret;
 }
 
-const dvfs_core *dvfs_get_core(const dvfs_ctx *ctx, unsigned int core_id) {
+int dvfs_get_core(const dvfs_ctx *ctx, const dvfs_core** ppCore, unsigned int core_id) {
    unsigned int i;
 
    assert(ctx != NULL);
+   if ( ctx == NULL )
+   {
+       return DVFS_ERROR_INVALID_ARG;
+   }
 
    for (i = 0; i < ctx->nb_units; i++) {
       unsigned int j;
       for (j = 0; j < ctx->units[i]->nb_cores; j++) {
          if (ctx->units[i]->cores[j]->id == core_id) {
-            return ctx->units[i]->cores[j];
+            *ppCore = ctx->units[i]->cores[j];
+             return DVFS_SUCCESS;
          }
       }
    }
 
-   return NULL;
+   return DVFS_ERROR_INVALID_CORE_ID;
 }
 
-const dvfs_unit *dvfs_get_unit(const dvfs_ctx *ctx, const dvfs_core *core) {
+int dvfs_get_unit(const dvfs_ctx *ctx, const dvfs_core *core, const dvfs_unit** ppUnit) {
    unsigned int i;
 
    assert(ctx != NULL && core != NULL);
+   if ( ctx == NULL || core == NULL )
+   {
+       return DVFS_ERROR_INVALID_ARG;
+   }
 
    for (i = 0; i < ctx->nb_units; i++) {
       unsigned int j;
       for (j = 0; j < ctx->units[i]->nb_cores; j++) {
-         if (ctx->units[i]->cores[j]->id == core->id) {
-            return ctx->units[i];
+         if (ctx->units[i]->cores[j]->id == core->id)
+         {
+            *ppUnit = ctx->units[i];
+            return DVFS_SUCCESS;
          }
       }
    }
 
-   return NULL;
+   // Sincerely, we should never reach this point
+   return DVFS_ERROR_CORE_UNIT_MISMATCH;
 }
 
 static unsigned int get_nb_cores() {

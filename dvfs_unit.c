@@ -21,88 +21,142 @@
 #include <assert.h>
 #include <stdlib.h>
 
-dvfs_unit *dvfs_unit_open(unsigned int nb_cores, dvfs_core **cores, unsigned int unit_id) {
-   assert(cores != NULL);
+#include "dvfs_error.h"
 
-   dvfs_unit *res = malloc(sizeof(*res));
-   res->nb_cores = nb_cores;
-   res->cores = cores;
-   res->id = unit_id;
-   return res;
+int dvfs_unit_open(dvfs_unit** ppUnit, unsigned int nb_cores, dvfs_core **cores, unsigned int unit_id) {
+   assert(ppUnit != NULL);
+   assert(cores != NULL);
+   if (cores == NULL || ppUnit == NULL)
+   {
+       return DVFS_ERROR_INVALID_ARG;
+   }
+
+   *ppUnit = malloc(sizeof(*(*ppUnit)));
+   if ( *ppUnit == NULL )
+   {
+      return DVFS_ERROR_MEM_ALLOC_FAILED;
+   }
+
+   (*ppUnit)->nb_cores = nb_cores;
+   (*ppUnit)->cores = cores;
+   (*ppUnit)->id = unit_id;
+
+   return DVFS_SUCCESS;
 }
 
-void dvfs_unit_close(dvfs_unit *unit) {
+int dvfs_unit_close(dvfs_unit *unit) {
    unsigned int i;
+   int id_result=DVFS_SUCCESS;
 
    assert(unit != NULL);
 
    for (i = 0; i < unit->nb_cores; i++) {
-      dvfs_core_close(unit->cores[i]);
+      int cresult = dvfs_core_close(unit->cores[i]);
+      if ( cresult != DVFS_SUCCESS )
+      {
+          id_result = cresult;
+      }
    }
    free(unit->cores);
    free(unit);
+
+   return id_result;
 }
 
-unsigned int dvfs_unit_set_gov(const dvfs_unit *unit, const char *gov) {
+int dvfs_unit_set_gov(const dvfs_unit *unit, const char *gov) {
    unsigned int i;
-   short ret = 1;
+   int ret = DVFS_SUCCESS;
 
    assert(unit != NULL);
+   assert(gov != NULL);
+   if ( unit == NULL || gov == NULL)
+   {
+       return DVFS_ERROR_INVALID_ARG;
+   }
 
    for (i = 0; i < unit->nb_cores; i++) {
-      ret &= dvfs_core_set_gov (unit->cores[i], gov);
-      if (!ret) {
+      int cret = dvfs_core_set_gov (unit->cores[i], gov);
+      if (cret != DVFS_SUCCESS )
+      {
          fprintf (stderr, "unitSetGov: error for core #%u\n", i);
+         ret=cret; // Report last error to calling function
       }
    }
 
    return ret;
 }
 
-unsigned int dvfs_unit_set_freq(const dvfs_unit *unit, unsigned int freq) {
+int dvfs_unit_set_freq(const dvfs_unit *unit, unsigned int freq) {
    unsigned int i;
-   short ret = 1;
+   int ret = DVFS_SUCCESS;
 
    assert(unit != NULL);
+   if ( unit == NULL)
+   {
+       return DVFS_ERROR_INVALID_ARG;
+   }
 
    for (i = 0; i < unit->nb_cores; i++) {
-      ret &= dvfs_core_set_freq(unit->cores[i], freq);
-      if (!ret) {
+      int cret = dvfs_core_set_freq(unit->cores[i], freq);
+      if (cret != DVFS_SUCCESS) {
          fprintf (stderr, "unitSetFreq: error for core #%u\n", i);
+         ret=cret;
       }
    }
 
    return ret;
 }
 
-const dvfs_core *dvfs_unit_get_core(const dvfs_unit *unit, unsigned int id) {
+int dvfs_unit_get_core(const dvfs_unit *unit, dvfs_core_handle* p_core_handle, unsigned int id) {
    unsigned int i;
 
    assert(unit != NULL);
+   assert(p_core_handle != NULL);
+   if ( unit == NULL || p_core_handle == NULL)
+   {
+       return DVFS_ERROR_INVALID_ARG;
+   }
 
    for (i = 0; i < unit->nb_cores; i++) {
       if (unit->cores[i]->id == id) {
-         return unit->cores[i];
+         *p_core_handle = unit->cores[i];
+         return DVFS_SUCCESS;
       }
    }
 
-   return NULL;
+   return DVFS_ERROR_INVALID_CORE_ID;
 }
 
-unsigned int dvfs_unit_get_freq(const dvfs_unit *unit) {
-   unsigned int mfreq = 0, i;
+int dvfs_unit_get_freq(const dvfs_unit *unit, unsigned int* pFreq) {
+   unsigned int i=0;
 
    assert(unit != NULL);
-
-   for (i = 0; i < unit->nb_cores; i++) {
-      unsigned int cfreq = dvfs_core_get_current_freq(unit->cores[i]);
-      mfreq = (mfreq >= cfreq ? mfreq : cfreq);
+   assert(pFreq != NULL);
+   if ( unit == NULL || pFreq == NULL)
+   {
+       return DVFS_ERROR_INVALID_ARG;
    }
 
-   return mfreq;
+   for (i = 0; i < unit->nb_cores; i++) {
+      unsigned int cfreq=0;
+      int id_error = dvfs_core_get_current_freq(unit->cores[i],&cfreq);
+      if ( id_error != DVFS_SUCCESS )
+      {
+          return id_error;
+      }
+
+      *pFreq = (*pFreq >= cfreq ? *pFreq : cfreq);
+   }
+
+   return DVFS_SUCCESS;
 }
 
-unsigned int dvfs_unit_get_id (const dvfs_unit *unit) {
+int dvfs_unit_get_id (const dvfs_unit *unit, unsigned int* pID) {
    assert (unit != NULL);
-   return unit->id;
+   if ( unit == NULL )
+   {
+       return DVFS_ERROR_INVALID_ARG;
+   }
+   *pID = unit->id;
+   return DVFS_SUCCESS;
 }

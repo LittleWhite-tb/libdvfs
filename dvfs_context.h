@@ -55,7 +55,7 @@ typedef struct {
  *
  * @sa dvfs_stop()
  */
-dvfs_ctx *dvfs_start(bool seq);
+int dvfs_start(dvfs_ctx** ppCtx, bool seq);
 
 /**
  * Frees the memory associated to a DVFS context and restores the DVFS control
@@ -63,7 +63,7 @@ dvfs_ctx *dvfs_start(bool seq);
  *
  * \sa dvfs_start()
  */
-void dvfs_stop(dvfs_ctx *ctx);
+int dvfs_stop(dvfs_ctx *ctx);
 
 /**
  * Returns true if one of the DVFS unit on the system allows TurboBoost.
@@ -81,7 +81,7 @@ int dvfs_has_TB();
  *
  * @return Upon successful completion 1 is return. Otherwise, 0 is return and errno is set appropriately.
  */
-unsigned int dvfs_set_gov(const dvfs_ctx *ctx, const char *gov);
+int dvfs_set_gov(const dvfs_ctx *ctx, const char *gov);
 
 /**
  * Sets the given frequency on all the DVFS units. The effects are unknown if
@@ -90,7 +90,7 @@ unsigned int dvfs_set_gov(const dvfs_ctx *ctx, const char *gov);
  * @param ctx The DVFS context as provided by dvfs_start()
  * @param freq The new frequency to set.
  */
-unsigned int dvfs_set_freq(dvfs_ctx *ctx, unsigned int freq);
+int dvfs_set_freq(dvfs_ctx *ctx, unsigned int freq);
 
 /**
  * Returns the dvfs_core structure associated to the given core id.
@@ -101,7 +101,7 @@ unsigned int dvfs_set_freq(dvfs_ctx *ctx, unsigned int freq);
  * @return The dvfs_core structure associated to the core or NULL if the core id
  * is not found.
  */
-const dvfs_core *dvfs_get_core(const dvfs_ctx *ctx, unsigned int core_id);
+int dvfs_get_core(const dvfs_ctx *ctx, const dvfs_core **ppCore, unsigned int core_id);
 
 /**
  * Returns the DVFS unit associated with the given core.
@@ -111,4 +111,4 @@ const dvfs_core *dvfs_get_core(const dvfs_ctx *ctx, unsigned int core_id);
  *
  * @return The DVFS unit in charge of core.
  */
-const dvfs_unit *dvfs_get_unit(const dvfs_ctx *ctx, const dvfs_core *core);
+int dvfs_get_unit(const dvfs_ctx *ctx, const dvfs_core *core, const dvfs_unit **ppUnit);

@@ -72,7 +72,7 @@ int dvfs_core_open(dvfs_core_handle* p_core_handle, unsigned int id, bool seq);
  *
  * @param core The core to close.
  */
-void dvfs_core_close(dvfs_core *core);
+int dvfs_core_close(dvfs_core *core);
 
 /**
  * Sets the current DVFS governor on the given core to the given buffer.
@@ -83,7 +83,7 @@ void dvfs_core_close(dvfs_core *core);
  *
  * @return Upon successful completion 1 is returned. Otherwise, 0 is returned and errno is set appropriately.
  */
-unsigned int dvfs_core_get_gov(const dvfs_core *core, char *buf, size_t buf_len);
+int dvfs_core_get_gov(const dvfs_core *core, char *buf, size_t buf_len);
 
 /**
  * Changes the governor on the given core.
@@ -93,7 +93,7 @@ unsigned int dvfs_core_get_gov(const dvfs_core *core, char *buf, size_t buf_len)
  *
  * @return Upon successful completion 1 is returned. Otherwise, 0 is returned and errno is set appropriately.
  */
-unsigned int dvfs_core_set_gov(const dvfs_core *core, const char *gov);
+int dvfs_core_set_gov(const dvfs_core *core, const char *gov);
 
 /**
  * Sets the frequency for the given core. Assumes that the "userspace" governor
@@ -104,7 +104,7 @@ unsigned int dvfs_core_set_gov(const dvfs_core *core, const char *gov);
  *
  * @return Upon successful completion 1 is returned. Otherwise, 0 is returned and errno is set appropriately.
  */
-unsigned int dvfs_core_set_freq(const dvfs_core *core, unsigned int freq);
+int dvfs_core_set_freq(const dvfs_core *core, unsigned int freq);
 
 /**
  * Returns the frequency currently set for the core. Warning, this is not
@@ -118,7 +118,7 @@ unsigned int dvfs_core_set_freq(const dvfs_core *core, unsigned int freq);
  *
  * @sa dvfs_unit_get_freq()
  */
-unsigned int dvfs_core_get_current_freq(const dvfs_core *core);
+int dvfs_core_get_current_freq(const dvfs_core *core, unsigned int* pFreq);
 
 /**
  * Returns the frequency currently set for the core.
@@ -128,7 +128,7 @@ unsigned int dvfs_core_get_current_freq(const dvfs_core *core);
  *
  * @return Upon successful completion the corresponding frequency is return. 0 is returned in case the given freq_id parameter is out of bounds.
  */
-unsigned int dvfs_core_get_freq(const dvfs_core *core, unsigned int freq_id);
+int dvfs_core_get_freq(const dvfs_core *core, unsigned int* pFreq, unsigned int freq_id);
 
 /**
  * Returns the number of frequencies available for the core.
@@ -137,5 +137,5 @@ unsigned int dvfs_core_get_freq(const dvfs_core *core, unsigned int freq_id);
  *
  * @return The number of frequencies available on this core.
  */
-unsigned int dvfs_core_get_nb_freqs (const dvfs_core *core);
+int dvfs_core_get_nb_freqs (const dvfs_core *core, unsigned int* pNbFreq);
 

@@ -35,6 +35,10 @@
 #define SCALING_AVAIL_FREQ_FILE_PATTERN "/sys/devices/system/cpu/cpu%u/cpufreq/scaling_available_frequencies"
 #define SCALING_SETSPEED_FILE_PATTERN "/sys/devices/system/cpu/cpu%u/cpufreq/scaling_setspeed"
 
+// Macros for wait and post on semaphore
+#define SAFE_SEM_POST(semaphore) { if (semaphore != NULL) sem_post(semaphore); }
+#define SAFE_SEM_WAIT(semaphore) { if (semaphore != NULL) sem_wait(semaphore); }
+
 static void init_dvfs_core(dvfs_core_handle core_handle, unsigned int id, bool seq)
 {
     assert(core_handle);
@@ -80,23 +84,17 @@ static int read_governor(dvfs_core_handle core_handle)
         // No cleanup to do
     }
 
-    if (core_handle->sem != NULL) {
-       sem_wait(core_handle->sem);
-    }
-
+    SAFE_SEM_WAIT(core_handle->sem);
     FILE* fd = fopen(fname, "r");
     if (fd == NULL)
     {
-       sem_post(core_handle->sem);
+       SAFE_SEM_POST(core_handle->sem);
        return DVFS_ERROR_FILE_ERROR;
     }
     fscanf(fd, "%127s", core_handle->init_gov);
     fclose(fd);
 
-    if (core_handle->sem != NULL) {
-       sem_post(core_handle->sem);
-    }
-
+    SAFE_SEM_POST(core_handle->sem);
 
     return DVFS_SUCCESS;
 }
@@ -114,22 +112,17 @@ static int read_cur_freq(dvfs_core_handle core_handle)
         // No cleanup to do here
     }
 
-    if (core_handle->sem != NULL) {
-       sem_wait(core_handle->sem);
-    }
-
+    SAFE_SEM_WAIT(core_handle->sem);
     FILE* fd = fopen(fname, "r");
     if (fd == NULL)
     {
-        sem_post(core_handle->sem);
+        SAFE_SEM_POST(core_handle->sem);
         return DVFS_ERROR_FILE_ERROR;
     }
     fscanf(fd, "%u", &core_handle->init_freq);
     fclose(fd);
 
-    if (core_handle->sem != NULL) {
-       sem_post(core_handle->sem);
-    }
+    SAFE_SEM_POST(core_handle->sem);
 
     return DVFS_SUCCESS;
 }
@@ -283,8 +276,13 @@ int dvfs_core_open(dvfs_core_handle* p_core_handle, unsigned int id, bool seq) {
    return DVFS_SUCCESS;
 }
 
-void dvfs_core_close(dvfs_core *core) {
+int dvfs_core_close(dvfs_core *core) {
    assert (core != NULL);
+   if (core==NULL)
+   {
+       return DVFS_ERROR_INVALID_ARG;
+   }
+
 
    // restore the previous state
    if (core->init_gov)
@@ -312,108 +310,99 @@ void dvfs_core_close(dvfs_core *core) {
    }
 
    free(core);
+
+   return DVFS_SUCCESS;
 }
 
-unsigned int dvfs_core_get_gov (const dvfs_core *core, char *buf, size_t buf_len) {
-   char fname [256];
-   FILE *fd;
+int dvfs_core_get_gov (const dvfs_core *core, char *buf, size_t buf_len) {
+   char fname [256]={0};
+   FILE *fd=NULL;
    assert (core != NULL);
+   if (core==NULL)
+   {
+       return DVFS_ERROR_INVALID_ARG;
+   }
 
    assert (sizeof (SCALING_GOVERNOR_FILE_PATTERN) <= sizeof (fname));
-
-   snprintf (fname, sizeof (fname), SCALING_GOVERNOR_FILE_PATTERN, core->id);
-
-   if (core->sem != NULL) {
-      sem_wait(core->sem);
+   if ( snprintf (fname, sizeof (fname), SCALING_GOVERNOR_FILE_PATTERN, core->id) >= (int)sizeof(fname))
+   {
+       return DVFS_ERROR_BUFFER_TOO_SHORT;
    }
 
+   SAFE_SEM_WAIT(core->sem);
    fd = fopen (fname, "r");
-   if (fd == NULL) {
-      if (core->sem != NULL) {
-         sem_post(core->sem);
-      }
-
-      return 0;
+   if (fd == NULL)
+   {
+      SAFE_SEM_POST(core->sem);
+      return DVFS_ERROR_FILE_ERROR;
    }
 
-   if (fgets (buf, buf_len, fd) == NULL) {
-      fclose (fd);
-
-      if (core->sem != NULL) {
-         sem_post(core->sem);
-      }
-
-      return 0;
-   }
-
+   char* fgets_result = fgets (buf, buf_len, fd);
    fclose (fd);
+   SAFE_SEM_POST(core->sem);
 
-   if (core->sem != NULL) {
-      sem_post(core->sem);
+   if (fgets_result == NULL)
+   {
+      return DVFS_ERROR_FILE_ERROR;
    }
 
-   return 1;
+   return DVFS_SUCCESS;
 }
 
-unsigned int dvfs_core_set_gov(const dvfs_core *core, const char *gov) {
-   char fname [256];
-   FILE *fd;
+int dvfs_core_set_gov(const dvfs_core *core, const char *gov) {
+   char fname [256]={0};
+   FILE *fd=NULL;
 
    assert (core != NULL);
+   if (core==NULL || gov == NULL)
+   {
+      return DVFS_ERROR_INVALID_ARG;
+   }
 
    // Paranoid: Make sure the fname buffer is long enough
    assert (sizeof (SCALING_GOVERNOR_FILE_PATTERN) <= sizeof (fname));
-
-   snprintf (fname, sizeof (fname), SCALING_GOVERNOR_FILE_PATTERN, core->id);
-
-   if (core->sem != NULL) {
-      sem_wait(core->sem);
+   if ( snprintf (fname, sizeof (fname), SCALING_GOVERNOR_FILE_PATTERN, core->id) >= (int)sizeof(fname))
+   {
+       return DVFS_ERROR_BUFFER_TOO_SHORT;
    }
+
+   SAFE_SEM_WAIT(core->sem);
 
    fd = fopen (fname, "w");
-   if (fd == NULL) {
-      if (core->sem != NULL) {
-         sem_post(core->sem);
-      }
-
-      return 0;
+   if (fd == NULL)
+   {
+      SAFE_SEM_POST(core->sem);
+      return DVFS_ERROR_FILE_ERROR;
    }
 
-   if (fwrite (gov, sizeof (*gov), strlen (gov) + 1, fd) < strlen (gov) + 1) {
+   if (fwrite (gov, sizeof (*gov), strlen (gov) + 1, fd) < strlen (gov) + 1)
+   {
       fclose (fd);
-
-      if (core->sem != NULL) {
-         sem_post(core->sem);
-      }
-
-      return 0;
+      SAFE_SEM_POST(core->sem);
+      return DVFS_ERROR_FILE_ERROR;
    }
 
-   if (fflush (fd) != 0) {
-      fclose(fd);
-
-      if (core->sem != NULL) {
-         sem_post(core->sem);
-      }
-
-      return 0;
-   }
-   fclose (fd);
-
-   if (core->sem != NULL) {
-      sem_post(core->sem);
+   int fflush_error = fflush (fd);
+   fclose(fd);
+   SAFE_SEM_POST(core->sem);
+   if (fflush_error != 0) {
+      return DVFS_ERROR_FILE_ERROR;
    }
 
-   return 1;
+   return DVFS_SUCCESS;
 }
 
-unsigned int dvfs_core_set_freq(const dvfs_core *core, unsigned int freq) {
+int dvfs_core_set_freq(const dvfs_core *core, unsigned int freq) {
    assert (core != NULL);
+   if (core==NULL)
+   {
+       return DVFS_ERROR_INVALID_ARG;
+   }
 
    // If fd_freq has not been opened yet
-   if (core->fd_setf == NULL) {
-      fprintf (stderr, "setf\n");
-      return 0;
+   if (core->fd_setf == NULL)
+   {
+      return DVFS_ERROR_SET_FREQ_FILE;
    }
 
    // check that the frequency asked is available
@@ -433,71 +422,65 @@ unsigned int dvfs_core_set_freq(const dvfs_core *core, unsigned int freq) {
    assert (freqIsValid);
 #endif
 
-   if (core->sem != NULL) {
-      sem_wait(core->sem);
-   }
-
+   SAFE_SEM_WAIT(core->sem);
    if (fprintf(core->fd_setf, "%u", freq) < 0) {
-      fprintf (stderr, "setf2\n");
-
-      if (core->sem != NULL) {
-         sem_post(core->sem);
-      }
-
-      return 0;
+      SAFE_SEM_POST(core->sem);
+      return DVFS_ERROR_FILE_ERROR;
    }
 
-   if (fflush (core->fd_setf) != 0) {
-      if (core->sem != NULL) {
-         sem_post(core->sem);
-      }
-
-      return 0;
+   int fflush_result = fflush (core->fd_setf);
+   SAFE_SEM_POST(core->sem);
+   if (fflush_result != 0)
+   {
+      return DVFS_ERROR_FILE_ERROR;
    }
 
-   if (core->sem != NULL) {
-      sem_post(core->sem);
-   }
-
-   return 1;
+   return DVFS_SUCCESS;
 }
 
-unsigned int dvfs_core_get_current_freq(const dvfs_core *core) {
-   unsigned int res;
-
+int dvfs_core_get_current_freq(const dvfs_core *core, unsigned int* pFreq) {
    assert (core != NULL);
-
-   if (core->sem != NULL) {
-      sem_wait(core->sem);
+   assert (pFreq != NULL);
+   if (core == NULL || pFreq == NULL)
+   {
+       return DVFS_ERROR_INVALID_ARG;
    }
 
-   if (fscanf(core->fd_getf, "%u", &res) < 0) {
-      if (core->sem != NULL) {
-         sem_post(core->sem);
-      }
-
-      return 0;
+   SAFE_SEM_WAIT(core->sem);
+   if (fscanf(core->fd_getf, "%u", pFreq) < 0) {
+      SAFE_SEM_POST(core->sem);
+      return DVFS_ERROR_FILE_ERROR;
    }
+   SAFE_SEM_POST(core->sem);
 
-   if (core->sem != NULL) {
-      sem_post(core->sem);
-   }
-
-   return res;
+   return DVFS_SUCCESS;
 }
 
-unsigned int dvfs_core_get_freq (const dvfs_core *core, unsigned int freq_id) {
+int dvfs_core_get_freq (const dvfs_core *core, unsigned int* pFreq, unsigned int freq_id) {
    assert (core != NULL);
-
-   if (freq_id >= core->nb_freqs) {
-      return 0;
+   assert (pFreq != NULL);
+   if (core == NULL || pFreq == NULL)
+   {
+       return DVFS_ERROR_INVALID_ARG;
    }
 
-   return core->freqs [freq_id];
+   if (freq_id >= core->nb_freqs)
+   {
+      return DVFS_ERROR_INVALID_FREQ_ID;
+   }
+
+   *pFreq = core->freqs [freq_id];
+   return DVFS_SUCCESS;
 }
 
-unsigned int dvfs_core_get_nb_freqs (const dvfs_core *core) {
+int dvfs_core_get_nb_freqs (const dvfs_core *core, unsigned int *pNbFreq) {
    assert (core != NULL);
+   assert(pNbFreq);
+   if ( core == NULL || pNbFreq==NULL)
+   {
+       return DVFS_ERROR_INVALID_ARG;
+   }
 
-   return core->nb_freqs;
+   *pNbFreq=core->nb_freqs;
+   return DVFS_SUCCESS;
 }

@@ -8,6 +8,7 @@
 int main(int argc, char **argv) {
    unsigned int i, j;
    int coreId = -1;
+   int result = DVFS_SUCCESS;
 
    // parse the arguments
    if (argc > 1) {
@@ -29,7 +30,8 @@ int main(int argc, char **argv) {
    }
 
    // read the topology
-   dvfs_ctx *ctx = dvfs_start(true);
+   dvfs_ctx *ctx = NULL;
+   dvfs_start(&ctx,true);
 
    if (ctx == NULL) {
       printf("Failed to read topology information.\n");
@@ -50,21 +52,32 @@ int main(int argc, char **argv) {
       printf("\n");
    // one specific core requested
    } else {
-      const dvfs_core *core = dvfs_get_core(ctx, coreId);
+      const dvfs_core *core = NULL;
+      result = dvfs_get_core(ctx, &core, coreId);
 
-      if (core == NULL) {
+      if (result != DVFS_SUCCESS) {
          dvfs_stop(ctx);
-         printf("Invalid core number provided\n");
+         printf("Invalid core number provided (%s)\n",dvfs_strerror(result));
+         dvfs_stop(ctx);
          return EXIT_FAILURE;
       }
 
-      const dvfs_unit *unit = dvfs_get_unit(ctx, core);
+      const dvfs_unit *unit = NULL;
+      result = dvfs_get_unit(ctx, core, &unit);
+      if ( result != DVFS_SUCCESS)
+      {
+          dvfs_stop(ctx);
+          printf("%s\n",dvfs_strerror(result));
+          dvfs_stop(ctx);
+          return EXIT_FAILURE;
+      }
+
       for (i = 0; i < unit->nb_cores; i++) {
          printf("%u ", unit->cores[i]->id);
       }
       printf("\n");
    }
-   
+
    dvfs_stop(ctx);
 
    return EXIT_SUCCESS;

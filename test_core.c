@@ -24,46 +24,58 @@
 int main(int argc, char **argv)
 {
    unsigned int i;
+   int id_result = DVFS_SUCCESS;
 
    (void) argc;
    (void) argv;
 
-   dvfs_ctx *ctx = dvfs_start(true);
+   dvfs_ctx *ctx = NULL;
+   id_result = dvfs_start(&ctx,true);
    if (ctx == NULL)
    {
       perror ("DVFS Start");
       return -1;
    }
 
-   const dvfs_core *core = dvfs_get_core(ctx, 0);
-
-   if (core == NULL) {
+   const dvfs_core *core = NULL;
+   id_result = dvfs_get_core(ctx, &core, 0);
+   if (id_result != DVFS_SUCCESS) {
       perror ("Get core");
       return -1;
    }
 
-   unsigned int nb_freqs = dvfs_core_get_nb_freqs (core);
-
-   if (nb_freqs == 0) {
-      perror ("get freq");
+   unsigned int nb_freqs = 0;
+   id_result = dvfs_core_get_nb_freqs (core,&nb_freqs);
+   if ( id_result != DVFS_SUCCESS )
+   {
+      fprintf(stderr,"Unable to get freq : %s",dvfs_strerror(id_result));
+      perror ("Perror : ");
+      dvfs_stop(ctx);
       return -1;
    }
 
    for (i = 0; i < nb_freqs; i++) {
       printf("%u\n", core->freqs[i]);
    }
-   const dvfs_unit *unit = dvfs_get_unit(ctx, core);
-   if (unit == NULL) {
+   const dvfs_unit *unit = NULL;
+   id_result = dvfs_get_unit(ctx, core, &unit);
+   if (id_result != DVFS_SUCCESS) {
       perror ("get unit");
+      dvfs_stop(ctx);
       return -1;
    }
 
-   if (dvfs_unit_set_gov(unit, "userspace") == 0) {
+   id_result = dvfs_unit_set_gov(unit, "userspace");
+   if (id_result != DVFS_SUCCESS) {
+      fprintf(stderr,"Unable to set governort : %s\n",dvfs_strerror(id_result));
       perror ("Set governor");
+      dvfs_stop(ctx);
       return -1;
    }
 
-   if (dvfs_unit_set_freq(unit, core->freqs[core->nb_freqs - 1]) == 0) {
+   id_result = dvfs_unit_set_freq(unit, core->freqs[core->nb_freqs - 1]);
+   if (id_result != DVFS_SUCCESS) {
+      fprintf(stderr,"Unable to set freq : %s\n",dvfs_strerror(id_result));
       perror ("Unit set freq");
    }
 

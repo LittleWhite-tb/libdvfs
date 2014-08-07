@@ -22,13 +22,17 @@
 
 // Error code definition
 #define DVFS_SUCCESS 0                            /*!< No error */
-#define DVFS_ERROR_INVALID_ARG 1                  /*!< Invalid argument passed to the function */
-#define DVFS_ERROR_FILE_ERROR 2                   /*!< File error (use strerrno to have more information) */
-#define DVFS_ERROR_MEM_ALLOC_FAILED 3             /*!< Memory allocation failed */
-#define DVFS_ERROR_RELATED_CORE_UNAVAILABLE 4     /*!< Failed to get related core */
-#define DVFS_ERROR_SEMAPHORE_FAILURE 5            /*!< Failure related to semaphore function */
-#define DVFS_ERROR_BUFFER_TOO_SHORT 6             /*!< A buffer was not big enough for the operation */
-#define DVFS_ERROR_UNKNOWN 7                      /** Unknown error
+#define DVFS_ERROR_INVALID_ARG -1                  /*!< Invalid argument passed to the function */
+#define DVFS_ERROR_FILE_ERROR -2                   /*!< File error (use strerrno to have more information) */
+#define DVFS_ERROR_MEM_ALLOC_FAILED -3             /*!< Memory allocation failed */
+#define DVFS_ERROR_RELATED_CORE_UNAVAILABLE -4     /*!< Failed to get related core */
+#define DVFS_ERROR_SEMAPHORE_FAILURE -5            /*!< Failure related to semaphore function */
+#define DVFS_ERROR_BUFFER_TOO_SHORT -6             /*!< A buffer was not big enough for the operation */
+#define DVFS_ERROR_SET_FREQ_FILE -7                /*!< File to set frequency is not available */
+#define DVFS_ERROR_INVALID_FREQ_ID -8              /*!< The freq ID is not available */
+#define DVFS_ERROR_INVALID_CORE_ID -9              /*!< The core ID is not available */
+#define DVFS_ERROR_CORE_UNIT_MISMATCH -10          /*!< Core is not findable in this CPU  */
+#define DVFS_ERROR_UNKNOWN -11                     /** Unknown error
                                                       (all greater error code results in this) */
 
 /**
@@ -36,4 +40,4 @@
  * @param id_error error number
  * @return a string describing the error. You don't have to free this.
  */
-const char* dvfs_strerrno(int id_error);
+const char* dvfs_strerror(int id_error);

@@ -26,19 +26,30 @@ int main(int argc, char **argv)
    (void) argc;
    (void) argv;
 
-   dvfs_ctx *ctx = dvfs_start(true);
-   if (ctx == NULL) {
+   int id_result=DVFS_SUCCESS;
+
+   dvfs_ctx *ctx = NULL;
+   id_result = dvfs_start(&ctx,true);
+   if (id_result != DVFS_SUCCESS) {
       perror ("DVFS Start");
       return -1;
    }
 
-   if (dvfs_set_gov(ctx, "userspace") == 0) {
+   id_result = dvfs_set_gov(ctx, "userspace");
+   if (id_result != DVFS_SUCCESS)
+   {
+      fprintf(stderr,"Unable to set governor : %s (%d)\n",dvfs_strerror(id_result),id_result);
       perror ("Setting userspace");
+      dvfs_stop(ctx);
       return -1;
    }
 
-   if (dvfs_set_freq(ctx, 2200000) == 0) {
+   id_result = dvfs_set_freq(ctx, 2200000);
+   if (id_result != DVFS_SUCCESS)
+   {
+      fprintf(stderr,"Unable to set freq : %s\n",dvfs_strerror(id_result));
       perror ("Setting frequency");
+      dvfs_stop(ctx);
       return -1;
    }
 
