@@ -47,8 +47,6 @@ typedef struct {
    sem_t *sem;             //!< Semaphore for sequentialization. Can be NULL.
 } dvfs_core;
 
-typedef dvfs_core* dvfs_core_handle;
-
 /**
  * Opens the Core context for the given core ID.
  *
@@ -64,7 +62,7 @@ typedef dvfs_core* dvfs_core_handle;
  *
  * @sa dvfs_core_close()
  */
-int dvfs_core_open(dvfs_core_handle* p_core_handle, unsigned int id, bool seq);
+int dvfs_core_open(dvfs_core** ppCore, unsigned int id, bool seq);
 
 /**
  * Closes properly an opened Core context.

@@ -39,19 +39,19 @@
 #define SAFE_SEM_POST(semaphore) { if (semaphore != NULL) sem_post(semaphore); }
 #define SAFE_SEM_WAIT(semaphore) { if (semaphore != NULL) sem_wait(semaphore); }
 
-static void init_dvfs_core(dvfs_core_handle core_handle, unsigned int id, bool seq)
+static void init_dvfs_core(dvfs_core* pCore, unsigned int id, bool seq)
 {
-    assert(core_handle);
+    assert(pCore);
 
     // A well initialized struct avoids tons of errors, trust me
-    core_handle->id = id;
-    core_handle->nb_freqs = 0;
-    core_handle->freqs = NULL;
-    core_handle->fd_getf = NULL;
-    core_handle->fd_setf = NULL;
-    memset (core_handle->init_gov, 0, sizeof (core_handle->init_gov));
-    core_handle->init_freq = 0;
-    core_handle->sem = NULL;
+    pCore->id = id;
+    pCore->nb_freqs = 0;
+    pCore->freqs = NULL;
+    pCore->fd_getf = NULL;
+    pCore->fd_setf = NULL;
+    memset (pCore->init_gov, 0, sizeof (pCore->init_gov));
+    pCore->init_freq = 0;
+    pCore->sem = NULL;
 
     // open / create the semaphore
     if (seq) {
@@ -63,80 +63,80 @@ static void init_dvfs_core(dvfs_core_handle core_handle, unsigned int id, bool s
        }
        else
        {
-          core_handle->sem = sem;
+          pCore->sem = sem;
        }
     }
 }
 
-static int read_governor(dvfs_core_handle core_handle)
+static int read_governor(dvfs_core* pCore)
 {
     char fname [256] = {0};
 
-    assert(core_handle);
+    assert(pCore);
 
     // Paranoid: Make sure the fname buffer is long enough
     assert (sizeof (SCALING_GOVERNOR_FILE_PATTERN) <= sizeof (fname));
 
     /* fetch  the initial governor and frequency */
-    if ( snprintf (fname, sizeof (fname), SCALING_GOVERNOR_FILE_PATTERN, core_handle->id) >= (int)sizeof(fname) )
+    if ( snprintf (fname, sizeof (fname), SCALING_GOVERNOR_FILE_PATTERN, pCore->id) >= (int)sizeof(fname) )
     {
         return DVFS_ERROR_BUFFER_TOO_SHORT;
         // No cleanup to do
     }
 
-    SAFE_SEM_WAIT(core_handle->sem);
+    SAFE_SEM_WAIT(pCore->sem);
     FILE* fd = fopen(fname, "r");
     if (fd == NULL)
     {
-       SAFE_SEM_POST(core_handle->sem);
+       SAFE_SEM_POST(pCore->sem);
        return DVFS_ERROR_FILE_ERROR;
     }
-    fscanf(fd, "%127s", core_handle->init_gov);
+    fscanf(fd, "%127s", pCore->init_gov);
     fclose(fd);
 
-    SAFE_SEM_POST(core_handle->sem);
+    SAFE_SEM_POST(pCore->sem);
 
     return DVFS_SUCCESS;
 }
 
-static int read_cur_freq(dvfs_core_handle core_handle)
+static int read_cur_freq(dvfs_core* pCore)
 {
     char fname [256] = {0};
 
-    assert(core_handle);
+    assert(pCore);
 
     assert (sizeof (SCALING_CURFREQ_FILE_PATTERN) <= sizeof (fname));
-    if ( snprintf (fname, sizeof (fname), SCALING_CURFREQ_FILE_PATTERN, core_handle->id) >= (int)sizeof(fname) )
+    if ( snprintf (fname, sizeof (fname), SCALING_CURFREQ_FILE_PATTERN, pCore->id) >= (int)sizeof(fname) )
     {
         return DVFS_ERROR_BUFFER_TOO_SHORT;
         // No cleanup to do here
     }
 
-    SAFE_SEM_WAIT(core_handle->sem);
+    SAFE_SEM_WAIT(pCore->sem);
     FILE* fd = fopen(fname, "r");
     if (fd == NULL)
     {
-        SAFE_SEM_POST(core_handle->sem);
+        SAFE_SEM_POST(pCore->sem);
         return DVFS_ERROR_FILE_ERROR;
     }
-    fscanf(fd, "%u", &core_handle->init_freq);
+    fscanf(fd, "%u", &pCore->init_freq);
     fclose(fd);
 
-    SAFE_SEM_POST(core_handle->sem);
+    SAFE_SEM_POST(pCore->sem);
 
     return DVFS_SUCCESS;
 }
 
-int read_available_freq(dvfs_core_handle core_handle)
+int read_available_freq(dvfs_core* pCore)
 {
     char fname [256] = {0};
 
-    assert(core_handle);
+    assert(pCore);
     // Paranoid: Make sure the fname buffer is long enough
     assert (sizeof (SCALING_AVAIL_FREQ_FILE_PATTERN) <= sizeof (fname));
 
     /* parse all the frequencies */
-    if ( snprintf (fname, sizeof (fname), SCALING_AVAIL_FREQ_FILE_PATTERN, core_handle->id) >= (int)sizeof(fname))
+    if ( snprintf (fname, sizeof (fname), SCALING_AVAIL_FREQ_FILE_PATTERN, pCore->id) >= (int)sizeof(fname))
     {
         return DVFS_ERROR_BUFFER_TOO_SHORT;
     }
@@ -165,7 +165,7 @@ int read_available_freq(dvfs_core_handle core_handle)
           if (inFreq) {
              continue;
           }
-          core_handle->nb_freqs++;
+          pCore->nb_freqs++;
           inFreq = true;
        } else {
           inFreq = false;
@@ -173,10 +173,10 @@ int read_available_freq(dvfs_core_handle core_handle)
     }
 
     // Paranoid: No need to syscall malloc if no freqs are available
-    assert (core_handle->nb_freqs > 0);
+    assert (pCore->nb_freqs > 0);
 
-    core_handle->freqs = malloc(core_handle->nb_freqs * sizeof(*core_handle->freqs));
-    if ( core_handle->freqs == NULL )
+    pCore->freqs = malloc(pCore->nb_freqs * sizeof(*pCore->freqs));
+    if ( pCore->freqs == NULL )
     {
         return DVFS_ERROR_MEM_ALLOC_FAILED;
     }
@@ -184,62 +184,62 @@ int read_available_freq(dvfs_core_handle core_handle)
     unsigned int i=0;
     char *strtokctx=NULL;
     for (i = 0, tmpstr = strtok_r(freqs, " ", &strtokctx);
-         i < core_handle->nb_freqs && tmpstr != NULL;
+         i < pCore->nb_freqs && tmpstr != NULL;
          i++, tmpstr = strtok_r(NULL, " ", &strtokctx))
     {
        char *end;
-       core_handle->freqs[core_handle->nb_freqs - i - 1] = strtol (tmpstr, &end, 10);
+       pCore->freqs[pCore->nb_freqs - i - 1] = strtol (tmpstr, &end, 10);
 
        // Paranoid: Check that what we have read in the file is valid
        assert (end != tmpstr);
     }
-    assert (i == core_handle->nb_freqs);
+    assert (i == pCore->nb_freqs);
 
     return DVFS_SUCCESS;
 }
 
-int dvfs_core_open(dvfs_core_handle* p_core_handle, unsigned int id, bool seq) {
+int dvfs_core_open(dvfs_core** pCore, unsigned int id, bool seq) {
    char fname [256] = {0};
 
    int id_error=DVFS_SUCCESS;
 
-   if ( p_core_handle == NULL )
+   if ( pCore == NULL )
    {
         return DVFS_ERROR_INVALID_ARG;
    }
 
-   *p_core_handle = malloc(sizeof(dvfs_core));
-   if ( p_core_handle == NULL )
+   *pCore = malloc(sizeof(dvfs_core));
+   if ( pCore == NULL )
    {
        return DVFS_ERROR_MEM_ALLOC_FAILED;
    }
 
-   init_dvfs_core(*p_core_handle,id,seq);
+   init_dvfs_core(*pCore,id,seq);
 
    // Gets initial governor (to put it back later)
-   id_error = read_governor(*p_core_handle);
+   id_error = read_governor(*pCore);
    if ( id_error != DVFS_SUCCESS )
    {
-       dvfs_core_close(*p_core_handle);
+       dvfs_core_close(*pCore);
        return id_error;
    }
 
-   if (!strcmp((*p_core_handle)->init_gov, "userspace")) // If it was userspace, we have
+   if (!strcmp((*pCore)->init_gov, "userspace")) // If it was userspace, we have
                                              // to gets initial frequency
                                              // to put it back later
    {
-      id_error = read_cur_freq(*p_core_handle);
+      id_error = read_cur_freq(*pCore);
       if ( id_error != DVFS_SUCCESS )
       {
-          dvfs_core_close(*p_core_handle);
+          dvfs_core_close(*pCore);
           return id_error;
       }
    }
 
-   id_error = read_available_freq(*p_core_handle);
+   id_error = read_available_freq(*pCore);
    if ( id_error != DVFS_SUCCESS)
    {
-       dvfs_core_close(*p_core_handle);
+       dvfs_core_close(*pCore);
        return id_error;
    }
 
@@ -249,11 +249,11 @@ int dvfs_core_open(dvfs_core_handle* p_core_handle, unsigned int id, bool seq) {
    // open the frequency setter file
    if ( snprintf (fname, sizeof (fname), SCALING_SETSPEED_FILE_PATTERN, id) >= (int)sizeof(fname))
    {
-      dvfs_core_close(*p_core_handle);
+      dvfs_core_close(*pCore);
       return DVFS_ERROR_BUFFER_TOO_SHORT;
    }
 
-   (*p_core_handle)->fd_setf = fopen(fname, "w");
+   (*pCore)->fd_setf = fopen(fname, "w");
    // don't check the result here to allow instantiating the library without any
    // write access. Only set freq will fail (with no trouble).
 
@@ -263,13 +263,13 @@ int dvfs_core_open(dvfs_core_handle* p_core_handle, unsigned int id, bool seq) {
    // same for the frequency getter file
    if ( snprintf(fname, sizeof(fname), SCALING_CURFREQ_FILE_PATTERN, id) >= (int)sizeof(fname) )
    {
-      dvfs_core_close(*p_core_handle);
+      dvfs_core_close(*pCore);
       return DVFS_ERROR_BUFFER_TOO_SHORT;
    }
 
-   (*p_core_handle)->fd_getf = fopen(fname, "r");
-   if ((*p_core_handle)->fd_getf == NULL) {
-      dvfs_core_close(*p_core_handle);
+   (*pCore)->fd_getf = fopen(fname, "r");
+   if ((*pCore)->fd_getf == NULL) {
+      dvfs_core_close(*pCore);
       return DVFS_ERROR_FILE_ERROR;
    }
 

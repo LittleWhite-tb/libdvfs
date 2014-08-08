@@ -107,19 +107,19 @@ int dvfs_unit_set_freq(const dvfs_unit *unit, unsigned int freq) {
    return ret;
 }
 
-int dvfs_unit_get_core(const dvfs_unit *unit, dvfs_core_handle* p_core_handle, unsigned int id) {
+int dvfs_unit_get_core(const dvfs_unit *unit, dvfs_core **ppCore, unsigned int id) {
    unsigned int i;
 
    assert(unit != NULL);
-   assert(p_core_handle != NULL);
-   if ( unit == NULL || p_core_handle == NULL)
+   assert(ppCore != NULL);
+   if ( unit == NULL || ppCore == NULL)
    {
        return DVFS_ERROR_INVALID_ARG;
    }
 
    for (i = 0; i < unit->nb_cores; i++) {
       if (unit->cores[i]->id == id) {
-         *p_core_handle = unit->cores[i];
+         *ppCore = unit->cores[i];
          return DVFS_SUCCESS;
       }
    }

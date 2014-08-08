@@ -14,9 +14,15 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+# Compilation variables
 CC?=gcc
 CFLAGS=-O3 -g -Wall -Wextra -fPIC
 LDFLAGS=-lpthread -lrt
+
+# Setup variables
+PREFIX?=/usr/local
+INCLUDE_DIR?=$(PREFIX)/include
+LIB_DIR?=$(PREFIX)/lib
 
 all: libdvfs.so freqdomain
 
@@ -43,16 +49,17 @@ doc:
 	doxygen libdvfs.doxy
 
 install:
-	/usr/bin/install -m 0755 libdvfs.so /usr/local/lib
-	mkdir -p /usr/local/include/libdvfs
-	/usr/bin/install -m 0655 dvfs_core.h /usr/local/include/libdvfs
-	/usr/bin/install -m 0655 dvfs_context.h /usr/local/include/libdvfs
-	/usr/bin/install -m 0655 dvfs_unit.h /usr/local/include/libdvfs
-	/usr/bin/install -m 0655 libdvfs.h /usr/local/include/libdvfs
+	mkdir -p $(LIB_DIR)/
+	/usr/bin/install -m 0755 libdvfs.so $(LIB_DIR)
+	mkdir -p $(INCLUDE_DIR)/libdvfs
+	/usr/bin/install -m 0655 dvfs_core.h $(INCLUDE_DIR)/libdvfs
+	/usr/bin/install -m 0655 dvfs_context.h $(INCLUDE_DIR)/libdvfs
+	/usr/bin/install -m 0655 dvfs_unit.h $(INCLUDE_DIR)/libdvfs
+	/usr/bin/install -m 0655 libdvfs.h $(INCLUDE_DIR)/libdvfs
 
 uninstall:
-	rm -f /usr/local/lib/libdvfs.so
-	rm -rf /usr/local/include/libdvfs
+	rm -f $(LIB_DIR)/libdvfs.so
+	rm -rf $(INCLUDE_DIR)/libdvfs
 
 clean:
 	rm -f *.o *.so

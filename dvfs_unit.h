@@ -98,7 +98,7 @@ int dvfs_unit_set_freq(const dvfs_unit *unit, unsigned int freq);
  *
  * @return The core with the given id or NULL if the core is not within \p unit.
  */
-int dvfs_unit_get_core(const dvfs_unit *unit, dvfs_core_handle *p_core_handle, unsigned int id);
+int dvfs_unit_get_core(const dvfs_unit *unit, dvfs_core** ppCore, unsigned int id);
 
 /**
  * Returns the frequency currently set for the current DVFS unit.
