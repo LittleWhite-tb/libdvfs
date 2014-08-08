@@ -18,7 +18,6 @@
 
 #include "dvfs_context.h"
 #include "dvfs_error.h"
-#include "dvfs_debug.h"
 
 #include <assert.h>
 #include <cpuid.h>
