@@ -53,12 +53,15 @@ typedef struct {
  * The dvfs_core is valid even if the semaphore failed. The frequency transitions will
  * not be seqeuntialized.
  *
+ * @param ppCore the instanciated Core context for this core. May return NULL in case
+ * of error. The error cases are often related to file opening (such as permission
+ * denied). In such cases errno is set appropriately.
  * @param id The id of the core to control.
  * @param seq True when the frequency transitions must be sequentialized.
  *
- * @return an instanciated Core context for this core. May return NULL in case
- * of error. The error cases are often related to file opening (such as permission
- * denied). In such cases errno is set appropriately.
+ * @return \retval DVFS_SUCCESS if everything goes right.
+ *         \retval DVFS_ERROR_INVALID_ARG if \c ppUnit or \c cores are NULL.
+ *         \retval DVFS_ERROR_MEM_ALLOC_FAILED if memory allocation failed.
  *
  * @sa dvfs_core_close()
  */
@@ -69,6 +72,9 @@ int dvfs_core_open(dvfs_core** ppCore, unsigned int id, bool seq);
  * Sets back the governor that was in place when opening the context.
  *
  * @param core The core to close.
+ *
+ * @return \retval DVFS_SUCCESS if everything goes right.
+ *         \retval DVFS_ERROR_INVALID_ARG if \c core is NULL.
  */
 int dvfs_core_close(dvfs_core *core);
 
@@ -79,7 +85,10 @@ int dvfs_core_close(dvfs_core *core);
  * @param buf The pointer to the buffer which will be set to the governor string value
  * @param buf_len The size of the buffer
  *
- * @return Upon successful completion 1 is returned. Otherwise, 0 is returned and errno is set appropriately.
+ * @return \retval DVFS_SUCCESS if everything goes right.
+ *         \retval DVFS_ERROR_INVALID_ARG if \c core or \c buf are NULL.
+ *         \retval DVFS_ERROR_BUFFER_TOO_SHORT if the buffer for the path to the governor file is too short
+ *         \retval DVFS_ERROR_FILE_ERROR operation on file failed (you can check errno for more details).
  */
 int dvfs_core_get_gov(const dvfs_core *core, char *buf, size_t buf_len);
 
@@ -89,7 +98,10 @@ int dvfs_core_get_gov(const dvfs_core *core, char *buf, size_t buf_len);
  * @param core The core on which the governor has to be set.
  * @param gov The governor to set.
  *
- * @return Upon successful completion 1 is returned. Otherwise, 0 is returned and errno is set appropriately.
+ * @return \retval DVFS_SUCCESS if everything goes right.
+ *         \retval DVFS_ERROR_INVALID_ARG if \c core or \c buf are NULL.
+ *         \retval DVFS_ERROR_BUFFER_TOO_SHORT if the buffer for the path to the governor file is too short.
+ *         \retval DVFS_ERROR_FILE_ERROR operation on file failed (you can check errno for more details).
  */
 int dvfs_core_set_gov(const dvfs_core *core, const char *gov);
 
@@ -100,7 +112,10 @@ int dvfs_core_set_gov(const dvfs_core *core, const char *gov);
  * @param core The related core.
  * @param freq The frequency to set.
  *
- * @return Upon successful completion 1 is returned. Otherwise, 0 is returned and errno is set appropriately.
+ * @return \retval DVFS_SUCCESS if everything goes right.
+ *         \retval DVFS_ERROR_INVALID_ARG if \c core or \c buf are NULL.
+ *         \retval DVFS_ERROR_SET_FREQ_FILE frequency file not operational.
+ *         \retval DVFS_ERROR_FILE_ERROR operation on file failed (you can check errno for more details).
  */
 int dvfs_core_set_freq(const dvfs_core *core, unsigned int freq);
 
@@ -111,8 +126,11 @@ int dvfs_core_set_freq(const dvfs_core *core, unsigned int freq);
  * frequency actually set for the core, use instead \p dvfs_unit_get_freq().
  *
  * @param core The CPU core.
+ * @param pFreq The frequency currently set.
  *
- * @return The frequency selected for this core or 0 in case of error.
+ * @return \retval DVFS_SUCCESS if everything goes right.
+ *         \retval DVFS_ERROR_INVALID_ARG if \c core or \c buf are NULL.
+ *         \retval DVFS_ERROR_FILE_ERROR operation on file failed (you can check errno for more details).
  *
  * @sa dvfs_unit_get_freq()
  */
@@ -122,18 +140,23 @@ int dvfs_core_get_current_freq(const dvfs_core *core, unsigned int* pFreq);
  * Returns the frequency currently set for the core.
  *
  * @param core The CPU core.
+ * @param pFreq The frequency currentlu set
  * @param freq_id The id of the frequency with respect to the order in the freqs internal array
  *
- * @return Upon successful completion the corresponding frequency is return. 0 is returned in case the given freq_id parameter is out of bounds.
+ * @return \retval DVFS_SUCCESS if everything goes right.
+ *         \retval DVFS_ERROR_INVALID_ARG if \c core or \c pFreq are NULL.
+ *         \retval DVFS_ERROR_INVALID_FREQ_ID the id passed is not valid
  */
 int dvfs_core_get_freq(const dvfs_core *core, unsigned int* pFreq, unsigned int freq_id);
 
 /**
  * Returns the number of frequencies available for the core.
  *
- * @param core the CPU core.
+ * @param core The CPU core.
+ * @param pNbFreq The number of frequencies available for the core
  *
- * @return The number of frequencies available on this core.
+ * @return \retval DVFS_SUCCESS if everything goes right.
+ *         \retval DVFS_ERROR_INVALID_ARG if \c core or \c pNbFreq are NULL.
  */
 int dvfs_core_get_nb_freqs (const dvfs_core *core, unsigned int* pNbFreq);
 

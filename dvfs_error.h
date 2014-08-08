@@ -20,6 +20,14 @@
 
 #include "dvfs_core.h"
 
+/**
+ * @file dvfs_error.h
+ *
+ * Definitions of error codes. \c dvfs_strerror allows
+ * to return a string describing these errors in a human
+ * readable favor.
+ */
+
 // Error code definition
 #define DVFS_SUCCESS 0                            /*!< No error */
 #define DVFS_ERROR_INVALID_ARG -1                  /*!< Invalid argument passed to the function */
@@ -32,12 +40,12 @@
 #define DVFS_ERROR_INVALID_FREQ_ID -8              /*!< The freq ID is not available */
 #define DVFS_ERROR_INVALID_CORE_ID -9              /*!< The core ID is not available */
 #define DVFS_ERROR_CORE_UNIT_MISMATCH -10          /*!< Core is not findable in this CPU  */
-#define DVFS_ERROR_UNKNOWN -11                     /** Unknown error
+#define DVFS_ERROR_UNKNOWN -11                     /*!< Unknown error
                                                       (all greater error code results in this) */
 
 /**
  * Returns a string describing the error number
  * @param id_error error number
- * @return a string describing the error. You don't have to free this.
+ * @return a string describing the error. You don't have to free it.
  */
 const char* dvfs_strerror(int id_error);

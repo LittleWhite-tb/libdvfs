@@ -24,11 +24,15 @@
 
   The governor used prior calling \c dvfs_start() is restored when \c dvfs_stop() is called.
 
+  \section sec_errors Errors handling
+
+  Every function returns an error code. You can check it against \c DVFS_SUCCESS to determine if the function failed or not. \c dvfs_strerror() can be used to get a human readable error string.
+
   \section sec_install Compilation and installation
 
   The library has no external dependcy, you can compile it using the \c make command. You will need a standard C compilation tool-chain (make and GCC for instance).
 
-  You can install the library using \c make \c install.
+  You can install the library using \c make \c install. You can set the following environment variables \c PREFIX, \c INCLUDE_DIR and \c LIB_DIR to modify where the library will be installed.
 
   \warning In order to be able to control the frequencies, you need to be able to write to various files (\c cpufreq_setspeed, \c cpufreq_governor) in \c /sys/devices/system/cpu*\htmlonly\endhtmlonly/cpu/cpufreq/ and to read in most of the other files within the same directory.
 

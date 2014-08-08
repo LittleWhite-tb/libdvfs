@@ -47,11 +47,15 @@ typedef struct {
  * Creates a new DVFS unit in charge of the provided cores. You are not supposed
  * to directly call this function, use rather \c dvfs_start().
  *
+ * @param ppUnit pointer where the DVFS Unit instance will be placed
  * @param nb_cores The number of cores the unit handles.
  * @param cores The array of cores to handle. The array itself is freed when
  * calling \c dvfs_unit_close().
+ * @param unit_id the ID of this DVFS unit.
  *
- * @return A new DVFS unit or NULL in case of error.
+ * @return \retval DVFS_SUCCESS if everything goes right.
+ *         \retval DVFS_ERROR_INVALID_ARG if \c ppUnit or \c cores are NULL.
+ *         \retval DVFS_ERROR_MEM_ALLOC_FAILED if memory allocation failed.
  *
  * @sa dvfs_unit_close()
  * @sa dvfs_core
@@ -61,8 +65,12 @@ int dvfs_unit_open(dvfs_unit** ppUnit, unsigned int nb_cores, dvfs_core **cores,
 /**
  * Frees the memory associated to a DVFS unit and restore their DVFS state. You
  * are not supposed to directly call this function; use rather \c dvfs_stop().
+ * It calls \see dvfs_core_close() on every \see dvfs_core avaiable in this unit.
  *
  * @param unit The DVFS unit to close.
+ *
+ * @return \retval DVFS_SUCCESS if everything goes right.
+ *         \retval DVFS_ERROR_INVALID_ARG if \c unit or cores are NULL.
  *
  * @sa dvfs_unit_open()
  */
@@ -74,7 +82,9 @@ int dvfs_unit_close(dvfs_unit *unit);
  * @param unit The DVFS unit.
  * @param gov The governor to set.
  *
- * @return Upon successful completion 1 is return. Otherwise, 0 is return and errno is set appropriately.
+ * @return \retval DVFS_SUCCESS if everything goes right.
+ *         \retval DVFS_ERROR_INVALID_ARG if \c unit or \c gov are NULL.
+ *
  */
 int dvfs_unit_set_gov(const dvfs_unit *unit, const char *gov);
 
@@ -85,32 +95,44 @@ int dvfs_unit_set_gov(const dvfs_unit *unit, const char *gov);
  * @param unit The DVFS unit.
  * @param freq The frequency to set.
  *
- * @return Upon successful completion 1 is return. Otherwise, 0 is return and errno is set appropriately.
+ * @return \retval DVFS_SUCCESS if everything goes right.
+ *         \retval DVFS_ERROR_INVALID_ARG if \c unit is NULL.
  */
 int dvfs_unit_set_freq(const dvfs_unit *unit, unsigned int freq);
 
 /**
- * Returns the core with the given id if it is part of this DVFS unit, or NULL
+ * Gets the core with the given id if it is part of this DVFS unit, or NULL
  * otherwise.
  *
  * @param unit The DVFS unit.
+ * @param ppCore the \see dvfs_core identified by \c id
  * @param id The core id.
  *
- * @return The core with the given id or NULL if the core is not within \p unit.
+ * @return \retval DVFS_SUCCESS if everything goes right.
+ *         \retval DVFS_ERROR_INVALID_ARG if \c unit or \c ppCore are NULL.
+ *         \retval DVFS_ERROR_INVALID_CORE_ID the \c id did not match any core.
  */
 int dvfs_unit_get_core(const dvfs_unit *unit, dvfs_core** ppCore, unsigned int id);
 
 /**
- * Returns the frequency currently set for the current DVFS unit.
+ * Gets the frequency currently set for the current DVFS unit.
  *
  * @param unit The DVFS unit.
+ * @param pFreq the frequency currently set for the current DVFS unit.
  *
- * @return The frequency currently set for the whole unit.
+ * @return \retval DVFS_SUCCESS if everything goes right.
+ *         \retval DVFS_ERROR_INVALID_ARG if \c unit or \c pFreq are NULL.
  */
 int dvfs_unit_get_freq(const dvfs_unit *unit, unsigned int* pFreq);
 
 /**
  * Returns the index of the considered DVFS unit as stored in the
  * corresponding DVFS context structure array
+ *
+ * @param unit The DVFS unit.
+ * @param pID the index of this DVFS unit.
+ *
+ * @return \retval DVFS_SUCCESS if everything goes right.
+ *         \retval DVFS_ERROR_INVALID_ARG if \c unit or \c pID are NULL.
  */
 int dvfs_unit_get_id(const dvfs_unit *unit, unsigned int *pID);

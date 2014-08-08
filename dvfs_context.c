@@ -36,7 +36,6 @@ static void get_related_cores(unsigned int id, unsigned int **cores, unsigned in
 
 int dvfs_start(dvfs_ctx** ppCtx, bool seq) {
    unsigned int nb_cores = get_nb_cores();
-   DVFS_DEBUG("DVFS Start\n");
 
    if ( ppCtx == NULL )
    {
@@ -125,7 +124,7 @@ int dvfs_start(dvfs_ctx** ppCtx, bool seq) {
 int dvfs_stop(dvfs_ctx *ctx) {
    unsigned int i;
    int id_result = DVFS_SUCCESS;
-   DVFS_DEBUG("DVFS Stop\n");
+
    assert(ctx != NULL);
    if (ctx == NULL )
    {
@@ -154,7 +153,7 @@ int dvfs_has_TB() {
    FILE* pFile = NULL;
    pFile = fopen("/proc/cpuinfo", "r");
    if (pFile == NULL) {
-      return -1;
+      return DVFS_ERROR_FILE_ERROR;
    }
 
    int hasTB = 0;
@@ -219,7 +218,8 @@ int dvfs_get_core(const dvfs_ctx *ctx, const dvfs_core** ppCore, unsigned int co
    unsigned int i;
 
    assert(ctx != NULL);
-   if ( ctx == NULL )
+   assert(ppCore != NULL);
+   if ( ctx == NULL || ppCore == NULL )
    {
        return DVFS_ERROR_INVALID_ARG;
    }
@@ -240,8 +240,10 @@ int dvfs_get_core(const dvfs_ctx *ctx, const dvfs_core** ppCore, unsigned int co
 int dvfs_get_unit(const dvfs_ctx *ctx, const dvfs_core *core, const dvfs_unit** ppUnit) {
    unsigned int i;
 
-   assert(ctx != NULL && core != NULL);
-   if ( ctx == NULL || core == NULL )
+   assert(ctx != NULL);
+   assert(core != NULL);
+   assert(ppUnit != NULL);
+   if ( ctx == NULL || core == NULL || ppUnit == NULL)
    {
        return DVFS_ERROR_INVALID_ARG;
    }
