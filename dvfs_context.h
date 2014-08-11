@@ -125,7 +125,7 @@ int dvfs_get_core(const dvfs_ctx *ctx, const dvfs_core **ppCore, unsigned int co
  * Gets the DVFS unit associated to the given index
  *
  * @param ctx The DVFS context as provided by dvfs_start()
- * @param unit Will be filled with the DVFS unit.
+ * @param ppUnit Will be filled with the DVFS unit.
  * @param index The index of the DVFS unit to get
  *
  * @return \retval DVFS_SUCCESS if everything goes right.
