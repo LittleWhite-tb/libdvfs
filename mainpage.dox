@@ -44,7 +44,7 @@
 
   In order to control a single core, you need to perform the following operations:
   \li Start the library using \c dvfs_start()
-  \li Get the DVFS unit in charge of the core you want to control (\c dvfs_get_unit())
+  \li Get the DVFS unit in charge of the core you want to control (\c dvfs_get_unit_by_id() or \c dvfs_get_unit_by_core())
   \li Sets the \c userspace governor on it (\c dvfs_unit_set_gov())
   \li Sets the core frequency (\c dvfs_core_set_freq()).
 
