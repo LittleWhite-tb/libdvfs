@@ -106,7 +106,7 @@ int dvfs_set_gov(const dvfs_ctx *ctx, const char *gov);
 int dvfs_set_freq(dvfs_ctx *ctx, unsigned int freq);
 
 /**
- * Returns the dvfs_core structure associated to the given core id.
+ * Gets the dvfs_core structure associated to the given core id.
  *
  * @param ctx The DVFS context as provided by dvfs_start()
  * @param ppCore The dvfs_core structure associated to the core or NULL if the core id
@@ -120,7 +120,20 @@ int dvfs_set_freq(dvfs_ctx *ctx, unsigned int freq);
 int dvfs_get_core(const dvfs_ctx *ctx, const dvfs_core **ppCore, unsigned int core_id);
 
 /**
- * Returns the DVFS unit associated with the given core.
+ * Gets the DVFS unit associated to the given index
+ *
+ * @param ctx The DVFS context as provided by dvfs_start()
+ * @param unit Will be filled with the DVFS unit.
+ * @param index The index of the DVFS unit to get
+ *
+ * @return \retval DVFS_SUCCESS if everything goes right.
+ *         \retval DVFS_ERROR_INVALID_ARG if \c ctx or \c core or ppUnit are NULL.
+ *         \retval DVFS_ERROR_INVALID_INDEX if \c index does not match any DVFS unit.
+ */
+int dvfs_get_unit_by_id(const dvfs_ctx* ctx, const dvfs_unit** ppUnit, unsigned int index);
+
+/**
+ * Gets the DVFS unit associated with the given core.
  *
  * @param ctx The DVFS context as provided by dvfs_start()
  * @param core The core structure.
@@ -130,4 +143,15 @@ int dvfs_get_core(const dvfs_ctx *ctx, const dvfs_core **ppCore, unsigned int co
  *         \retval DVFS_ERROR_INVALID_ARG if \c ctx or \c core or ppUnit are NULL.
  *         \retval DVFS_ERROR_CORE_UNIT_MISMATCH if the unit can not be find.
  */
-int dvfs_get_unit(const dvfs_ctx *ctx, const dvfs_core *core, const dvfs_unit **ppUnit);
+int dvfs_get_unit_by_core(const dvfs_ctx *ctx, const dvfs_core *core, const dvfs_unit **ppUnit);
+
+/**
+ * Gets the number of DVFS units available in this context.
+ *
+ * @param ctx The DVFS context as provided by dvfs_start()
+ * @param pNb Will be filled with the number of DVFS unit available
+ *
+ * @return \retval DVFS_SUCCESS if everything goes right.
+ *         \retval DVFS_ERROR_INVALID_ARG if \c ctx or \c pNb are NULL.
+ */
+int dvfs_get_nb_unit(const dvfs_ctx* ctx, unsigned int *pNb);

@@ -34,6 +34,7 @@ const char* errors[NB_ERROR] =
     "File to set frequency is not available",
     "Freq ID is not available",
     "Core ID is not available",
+    "Invalid index",
     "Core not findable in DVFS units of this CPU",
     "Unknown error" // This is also reserved as the last error
 };

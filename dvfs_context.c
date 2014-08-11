@@ -236,7 +236,25 @@ int dvfs_get_core(const dvfs_ctx *ctx, const dvfs_core** ppCore, unsigned int co
    return DVFS_ERROR_INVALID_CORE_ID;
 }
 
-int dvfs_get_unit(const dvfs_ctx *ctx, const dvfs_core *core, const dvfs_unit** ppUnit) {
+int dvfs_get_unit_by_id(const dvfs_ctx* ctx, const dvfs_unit** ppUnit, unsigned int index)
+{
+    assert(ctx!=NULL);
+    assert(ppUnit!=NULL);
+    if ( ctx == NULL || ppUnit == NULL)
+    {
+        return DVFS_ERROR_INVALID_ARG;
+    }
+
+    if ( index >= ctx->nb_units )
+    {
+        return DVFS_ERROR_INVALID_INDEX;
+    }
+
+    *ppUnit = ctx->units[index];
+    return DVFS_SUCCESS;
+}
+
+int dvfs_get_unit_by_core(const dvfs_ctx *ctx, const dvfs_core *core, const dvfs_unit** ppUnit) {
    unsigned int i;
 
    assert(ctx != NULL);
@@ -260,6 +278,19 @@ int dvfs_get_unit(const dvfs_ctx *ctx, const dvfs_core *core, const dvfs_unit** 
 
    // Sincerely, we should never reach this point
    return DVFS_ERROR_CORE_UNIT_MISMATCH;
+}
+
+int dvfs_get_nb_unit(const dvfs_ctx* ctx, unsigned int* pNb)
+{
+    assert(ctx != NULL);
+    assert(pNb != NULL);
+    if ( ctx == NULL || pNb == NULL )
+    {
+        return DVFS_ERROR_INVALID_ARG;
+    }
+
+    *pNb = ctx->nb_units;
+    return DVFS_SUCCESS;
 }
 
 static unsigned int get_nb_cores() {

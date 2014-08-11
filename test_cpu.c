@@ -17,9 +17,17 @@
  */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <unistd.h>
 
 #include "libdvfs.h"
+
+#define CHECK_ERROR(ctx,fct,message) { int result = fct; \
+    if (result != DVFS_SUCCESS) { \
+        printf(message" (%s).\n",dvfs_strerror(result)); \
+        dvfs_stop(ctx); \
+        return EXIT_FAILURE; \
+    }}
 
 int main(int argc, char **argv)
 {
@@ -35,23 +43,8 @@ int main(int argc, char **argv)
       return -1;
    }
 
-   id_result = dvfs_set_gov(ctx, "userspace");
-   if (id_result != DVFS_SUCCESS)
-   {
-      fprintf(stderr,"Unable to set governor : %s (%d)\n",dvfs_strerror(id_result),id_result);
-      perror ("Setting userspace");
-      dvfs_stop(ctx);
-      return -1;
-   }
-
-   id_result = dvfs_set_freq(ctx, 2200000);
-   if (id_result != DVFS_SUCCESS)
-   {
-      fprintf(stderr,"Unable to set freq : %s\n",dvfs_strerror(id_result));
-      perror ("Setting frequency");
-      dvfs_stop(ctx);
-      return -1;
-   }
+   CHECK_ERROR(ctx,dvfs_set_gov(ctx, "userspace"),"Unable to set governor");
+   CHECK_ERROR(ctx,dvfs_set_freq(ctx, 2200000),"Unable to set freq");
 
    sleep(2);
 

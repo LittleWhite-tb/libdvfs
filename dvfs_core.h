@@ -120,7 +120,7 @@ int dvfs_core_set_gov(const dvfs_core *core, const char *gov);
 int dvfs_core_set_freq(const dvfs_core *core, unsigned int freq);
 
 /**
- * Returns the frequency currently set for the core. Warning, this is not
+ * Gets the frequency currently set for the core. Warning, this is not
  * necessarily the frequency currently active for the core as other cores in the
  * same unit may have requested a different frequency. In order to determine the
  * frequency actually set for the core, use instead \p dvfs_unit_get_freq().
@@ -137,7 +137,7 @@ int dvfs_core_set_freq(const dvfs_core *core, unsigned int freq);
 int dvfs_core_get_current_freq(const dvfs_core *core, unsigned int* pFreq);
 
 /**
- * Returns the frequency currently set for the core.
+ * Gets the frequency currently set for the core.
  *
  * @param core The CPU core.
  * @param pFreq The frequency currentlu set
@@ -150,7 +150,7 @@ int dvfs_core_get_current_freq(const dvfs_core *core, unsigned int* pFreq);
 int dvfs_core_get_freq(const dvfs_core *core, unsigned int* pFreq, unsigned int freq_id);
 
 /**
- * Returns the number of frequencies available for the core.
+ * Gets the number of frequencies available for the core.
  *
  * @param core The CPU core.
  * @param pNbFreq The number of frequencies available for the core
@@ -160,3 +160,13 @@ int dvfs_core_get_freq(const dvfs_core *core, unsigned int* pFreq, unsigned int 
  */
 int dvfs_core_get_nb_freqs (const dvfs_core *core, unsigned int* pNbFreq);
 
+/**
+ * Gets the ID of the DVFS core
+ *
+ * @param core The CPU core.
+ * @param pID Will be filled with the ID
+ *
+ * @return \retval DVFS_SUCCESS if everything goes right.
+ *         \retval DVFS_ERROR_INVALID_ARG if \c core or \c pNbFreq are NULL.
+ */
+int dvfs_core_get_id(const dvfs_core* core, unsigned int* pID);

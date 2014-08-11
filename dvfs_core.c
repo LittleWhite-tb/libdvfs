@@ -475,7 +475,7 @@ int dvfs_core_get_freq (const dvfs_core *core, unsigned int* pFreq, unsigned int
 
 int dvfs_core_get_nb_freqs (const dvfs_core *core, unsigned int *pNbFreq) {
    assert (core != NULL);
-   assert(pNbFreq);
+   assert(pNbFreq != NULL);
    if ( core == NULL || pNbFreq==NULL)
    {
        return DVFS_ERROR_INVALID_ARG;
@@ -483,4 +483,17 @@ int dvfs_core_get_nb_freqs (const dvfs_core *core, unsigned int *pNbFreq) {
 
    *pNbFreq=core->nb_freqs;
    return DVFS_SUCCESS;
+}
+
+int dvfs_core_get_id(const dvfs_core* core, unsigned int* pID)
+{
+    assert(core != NULL);
+    assert(pID != NULL);
+    if ( core == NULL || pID == NULL )
+    {
+        return DVFS_ERROR_INVALID_ARG;
+    }
+
+    *pID = core->id;
+    return DVFS_SUCCESS;
 }

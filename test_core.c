@@ -17,9 +17,17 @@
  */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <unistd.h>
 
 #include "libdvfs.h"
+
+#define CHECK_ERROR(ctx,fct,message) { int result = fct; \
+    if (result != DVFS_SUCCESS) { \
+        printf(message" (%s).\n",dvfs_strerror(result)); \
+        dvfs_stop(ctx); \
+        return EXIT_FAILURE; \
+    }}
 
 int main(int argc, char **argv)
 {
@@ -31,57 +39,30 @@ int main(int argc, char **argv)
 
    dvfs_ctx *ctx = NULL;
    id_result = dvfs_start(&ctx,true);
-   if (ctx == NULL)
+   if (id_result != DVFS_SUCCESS)
    {
       perror ("DVFS Start");
-      return -1;
+      return EXIT_FAILURE;
    }
 
    const dvfs_core *core = NULL;
-   id_result = dvfs_get_core(ctx, &core, 0);
-   if (id_result != DVFS_SUCCESS) {
-      perror ("Get core");
-      return -1;
-   }
+   CHECK_ERROR(ctx,dvfs_get_core(ctx, &core, 0),"Get core");
 
    unsigned int nb_freqs = 0;
-   id_result = dvfs_core_get_nb_freqs (core,&nb_freqs);
-   if ( id_result != DVFS_SUCCESS )
-   {
-      fprintf(stderr,"Unable to get freq : %s",dvfs_strerror(id_result));
-      perror ("Perror : ");
-      dvfs_stop(ctx);
-      return -1;
-   }
+   CHECK_ERROR(ctx,dvfs_core_get_nb_freqs (core,&nb_freqs),"Unable to get freq");
 
    for (i = 0; i < nb_freqs; i++) {
       printf("%u\n", core->freqs[i]);
    }
    const dvfs_unit *unit = NULL;
-   id_result = dvfs_get_unit(ctx, core, &unit);
-   if (id_result != DVFS_SUCCESS) {
-      perror ("get unit");
-      dvfs_stop(ctx);
-      return -1;
-   }
+   CHECK_ERROR(ctx,dvfs_get_unit_by_core(ctx, core, &unit),"Get unit");
 
-   id_result = dvfs_unit_set_gov(unit, "userspace");
-   if (id_result != DVFS_SUCCESS) {
-      fprintf(stderr,"Unable to set governort : %s\n",dvfs_strerror(id_result));
-      perror ("Set governor");
-      dvfs_stop(ctx);
-      return -1;
-   }
-
-   id_result = dvfs_unit_set_freq(unit, core->freqs[core->nb_freqs - 1]);
-   if (id_result != DVFS_SUCCESS) {
-      fprintf(stderr,"Unable to set freq : %s\n",dvfs_strerror(id_result));
-      perror ("Unit set freq");
-   }
+   CHECK_ERROR(ctx,dvfs_unit_set_gov(unit, "userspace"),"Unable to set governor");
+   CHECK_ERROR(ctx,dvfs_unit_set_freq(unit, core->freqs[core->nb_freqs - 1]),"Unable to set freq");
 
    sleep(2);
 
    dvfs_stop(ctx);
 
-   return 0;
+   return EXIT_SUCCESS;
 }

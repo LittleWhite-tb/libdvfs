@@ -107,6 +107,19 @@ int dvfs_unit_set_freq(const dvfs_unit *unit, unsigned int freq) {
    return ret;
 }
 
+int dvfs_unit_get_nb_core(const dvfs_unit* unit, unsigned int* pNbCores)
+{
+    assert(unit != NULL);
+    assert(pNbCores != NULL);
+    if ( unit == NULL || pNbCores == NULL)
+    {
+        return DVFS_ERROR_INVALID_ARG;
+    }
+
+    *pNbCores = unit->nb_cores;
+    return DVFS_SUCCESS;
+}
+
 int dvfs_unit_get_core(const dvfs_unit *unit, dvfs_core **ppCore, unsigned int id) {
    unsigned int i;
 
@@ -153,7 +166,8 @@ int dvfs_unit_get_freq(const dvfs_unit *unit, unsigned int* pFreq) {
 
 int dvfs_unit_get_id (const dvfs_unit *unit, unsigned int* pID) {
    assert (unit != NULL);
-   if ( unit == NULL )
+   assert(pID != NULL);
+   if ( unit == NULL || pID == NULL)
    {
        return DVFS_ERROR_INVALID_ARG;
    }

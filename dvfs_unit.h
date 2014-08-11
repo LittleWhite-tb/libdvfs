@@ -101,6 +101,17 @@ int dvfs_unit_set_gov(const dvfs_unit *unit, const char *gov);
 int dvfs_unit_set_freq(const dvfs_unit *unit, unsigned int freq);
 
 /**
+ * Gets te number of cores available in this DVFS unit.
+ *
+ * @param unit The DVFS unit.
+ * @param pNbCores Will be filled with the number of cores.
+ *
+ * @return \retval DVFS_SUCCESS if everything goes right.
+ *         \retval DVFS_ERROR_INVALID_ARG if \c unit or \c ppCore are NULL.
+ */
+int dvfs_unit_get_nb_core(const dvfs_unit* unit, unsigned int* pNbCores);
+
+/**
  * Gets the core with the given id if it is part of this DVFS unit, or NULL
  * otherwise.
  *

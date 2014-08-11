@@ -39,8 +39,9 @@
 #define DVFS_ERROR_SET_FREQ_FILE -7                /*!< File to set frequency is not available */
 #define DVFS_ERROR_INVALID_FREQ_ID -8              /*!< The freq ID is not available */
 #define DVFS_ERROR_INVALID_CORE_ID -9              /*!< The core ID is not available */
-#define DVFS_ERROR_CORE_UNIT_MISMATCH -10          /*!< Core is not findable in this CPU  */
-#define DVFS_ERROR_UNKNOWN -11                     /*!< Unknown error
+#define DVFS_ERROR_INVALID_INDEX -10               /*!< The index passed is invalid */
+#define DVFS_ERROR_CORE_UNIT_MISMATCH -11          /*!< Core is not findable in this CPU  */
+#define DVFS_ERROR_UNKNOWN -12                     /*!< Unknown error
                                                       (all greater error code results in this) */
 
 /**
