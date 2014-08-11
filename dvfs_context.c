@@ -279,7 +279,7 @@ int dvfs_get_unit_by_core(const dvfs_ctx *ctx, const dvfs_core *core, const dvfs
    return DVFS_ERROR_CORE_UNIT_MISMATCH;
 }
 
-int dvfs_get_nb_unit(const dvfs_ctx* ctx, unsigned int* pNb)
+int dvfs_get_nb_units(const dvfs_ctx* ctx, unsigned int* pNb)
 {
     assert(ctx != NULL);
     assert(pNb != NULL);

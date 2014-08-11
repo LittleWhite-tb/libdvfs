@@ -109,7 +109,7 @@ int dvfs_unit_set_freq(const dvfs_unit *unit, unsigned int freq);
  * @return \retval DVFS_SUCCESS if everything goes right.
  *         \retval DVFS_ERROR_INVALID_ARG if \c unit or \c ppCore are NULL.
  */
-int dvfs_unit_get_nb_core(const dvfs_unit* unit, unsigned int* pNbCores);
+int dvfs_unit_get_nb_cores(const dvfs_unit* unit, unsigned int* pNbCores);
 
 /**
  * Gets the core with the given id if it is part of this DVFS unit, or NULL

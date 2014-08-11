@@ -107,7 +107,7 @@ int dvfs_unit_set_freq(const dvfs_unit *unit, unsigned int freq) {
    return ret;
 }
 
-int dvfs_unit_get_nb_core(const dvfs_unit* unit, unsigned int* pNbCores)
+int dvfs_unit_get_nb_cores(const dvfs_unit* unit, unsigned int* pNbCores)
 {
     assert(unit != NULL);
     assert(pNbCores != NULL);

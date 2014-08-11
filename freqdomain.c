@@ -49,14 +49,14 @@ int main(int argc, char **argv) {
    if (coreId == -1)
    {
       unsigned int nb_units = 0;
-      CHECK_ERROR(ctx,dvfs_get_nb_unit(ctx,&nb_units),"Failed to get number of DVFS units in context");
+      CHECK_ERROR(ctx,dvfs_get_nb_units(ctx,&nb_units),"Failed to get number of DVFS units in context");
 
       for (i = 0; i < nb_units; i++)
       {
          unsigned int nb_cores = 0;
          const dvfs_unit* unit = NULL;
          CHECK_ERROR(ctx,dvfs_get_unit_by_id(ctx,&unit,i),"Failed to get DVFS unit");
-         CHECK_ERROR(ctx,dvfs_unit_get_nb_core(unit,&nb_cores),"Failed to get number of DVFS cores in unit");
+         CHECK_ERROR(ctx,dvfs_unit_get_nb_cores(unit,&nb_cores),"Failed to get number of DVFS cores in unit");
 
          for (j = 0; j < nb_cores; j++)
          {
@@ -82,7 +82,7 @@ int main(int argc, char **argv) {
       CHECK_ERROR(ctx,dvfs_get_unit_by_core(ctx, core, &unit),"");
 
       unsigned int nb_cores = 0;
-      CHECK_ERROR(ctx,dvfs_unit_get_nb_core(unit,&nb_cores),"Failed to get number of DVFS cores in unit");
+      CHECK_ERROR(ctx,dvfs_unit_get_nb_cores(unit,&nb_cores),"Failed to get number of DVFS cores in unit");
 
       for (i = 0; i < nb_cores; i++)
       {

@@ -156,4 +156,4 @@ int dvfs_get_unit_by_core(const dvfs_ctx *ctx, const dvfs_core *core, const dvfs
  * @return \retval DVFS_SUCCESS if everything goes right.
  *         \retval DVFS_ERROR_INVALID_ARG if \c ctx or \c pNb are NULL.
  */
-int dvfs_get_nb_unit(const dvfs_ctx* ctx, unsigned int *pNb);
+int dvfs_get_nb_units(const dvfs_ctx* ctx, unsigned int *pNb);
