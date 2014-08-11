@@ -78,7 +78,7 @@ int dvfs_unit_set_gov(const dvfs_unit *unit, const char *gov) {
       int cret = dvfs_core_set_gov (unit->cores[i], gov);
       if (cret != DVFS_SUCCESS )
       {
-         fprintf (stderr, "unitSetGov: error for core #%u\n", i);
+         fprintf (stderr, "[LIBDVFS][ERROR] unitSetGov: error for core #%u\n", i);
          ret=cret; // Report last error to calling function
       }
    }
@@ -99,7 +99,7 @@ int dvfs_unit_set_freq(const dvfs_unit *unit, unsigned int freq) {
    for (i = 0; i < unit->nb_cores; i++) {
       int cret = dvfs_core_set_freq(unit->cores[i], freq);
       if (cret != DVFS_SUCCESS) {
-         fprintf (stderr, "unitSetFreq: error for core #%u\n", i);
+         fprintf (stderr, "[LIBDVFS][ERROR] unitSetFreq: error for core #%u\n", i);
          ret=cret;
       }
    }

@@ -32,6 +32,7 @@ const char* errors[NB_ERROR] =
     "Failure with semaphore functions (in dvfs_core)",
     "Insufficient space in buffer to complete the operation",
     "File to set frequency is not available",
+    "Freq is not available",
     "Freq ID is not available",
     "Core ID is not available",
     "Invalid index",

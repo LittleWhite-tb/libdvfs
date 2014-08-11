@@ -58,7 +58,7 @@ static void init_dvfs_core(dvfs_core* pCore, unsigned int id, bool seq)
        sem_t *sem = sem_open(SEM_NAME, O_CREAT, 0600, 1);
        if (sem == SEM_FAILED)
        {
-          perror("Failed  to open libdvfs semaphore (frequency transitions will not be sequentialized)");
+          perror("[LIBDVFS][WARNING] Failed  to open libdvfs semaphore (frequency transitions will not be sequentialized)");
           // Even if the semaphore failed, we will continue.
        }
        else
@@ -416,8 +416,9 @@ int dvfs_core_set_freq(const dvfs_core *core, unsigned int freq) {
       }
    }
 
-   if (!freqIsValid) {
-      fprintf (stderr, "Freq %u is invalid\n", freq);
+   if (!freqIsValid)
+   {
+      return DVFS_ERROR_INVALID_FREQ;
    }
    assert (freqIsValid);
 #endif

@@ -81,7 +81,6 @@ int dvfs_start(dvfs_ctx** ppCtx, bool seq) {
       get_related_cores(c, &ucores_ids, &nb_ucores);
 
       if (ucores_ids == NULL) {
-         fprintf(stderr, "Failed to get related cores of core %u\n", c); // TODO
          dvfs_stop(*ppCtx);
          return DVFS_ERROR_RELATED_CORE_UNAVAILABLE;
       }
@@ -366,7 +365,7 @@ static void get_related_cores(unsigned int id, unsigned int **cores, unsigned in
       }
 
       if (sep != '-') { // Error case ... no format recognized here
-         fprintf(stderr, "Illformed topology file: expected '-', read '%c' \n", sep);
+         fprintf(stderr, "[LIBDVFS][ERROR] Illformed topology file: expected '-', read '%c' \n", sep);
          *nb_cores = 0;
          *cores = NULL;
          return;
