@@ -50,7 +50,7 @@ int main(int argc, char **argv)
 
    dvfs_stop(ctx);
 
-   if (dvfs_has_TB() == 1) {
+   if (dvfs_has_TB() == DVFS_TB_AVAILABLE) {
       printf("This CPU has TurboBoost\n");
    }
 

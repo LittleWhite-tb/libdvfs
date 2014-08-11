@@ -155,12 +155,12 @@ int dvfs_has_TB() {
       return DVFS_ERROR_FILE_ERROR;
    }
 
-   int hasTB = 0;
+   int hasTB = DVFS_TB_UNAVAILABLE;
    char buf [2048];
    while (fgets(buf, sizeof(buf), pFile) != NULL) {
       if (!strncmp (buf, "flags", 5)) {
          if (strstr (buf, "ida") != NULL) {
-            hasTB = 1;
+            hasTB = DVFS_TB_AVAILABLE;
             break;
          }
       }

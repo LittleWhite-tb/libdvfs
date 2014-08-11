@@ -73,11 +73,13 @@ int dvfs_start(dvfs_ctx** ppCtx, bool seq);
  */
 int dvfs_stop(dvfs_ctx *ctx);
 
+#define DVFS_TB_UNAVAILABLE 0   /*!< TurboBoost is not available, see dvfs_has_TB() */
+#define DVFS_TB_AVAILABLE 1     /*!< TurboBoost is available, see dvfs_has_TB() */
 /**
  * Returns true if one of the DVFS unit on the system allows TurboBoost.
  *
- * @return \retval 1 if TurboBoost is available on one of the DVFS unit.
- *         \retval 0 if TurboBoost is not available.
+ * @return \retval DVFS_TB_AVAILABLE if TurboBoost is available on one of the DVFS unit.
+ *         \retval DVFS_TB_UNAVAILABLE if TurboBoost is not available.
  *         \retval DVFS_ERROR_FILE_FAILED if the information could not be read (likely because /proc/cpuinfo is not available), or can't be opened.
  */
 int dvfs_has_TB();
