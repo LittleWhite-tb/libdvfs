@@ -55,6 +55,7 @@ install:
 	/usr/bin/install -m 0655 dvfs_core.h $(INCLUDE_DIR)/libdvfs
 	/usr/bin/install -m 0655 dvfs_context.h $(INCLUDE_DIR)/libdvfs
 	/usr/bin/install -m 0655 dvfs_unit.h $(INCLUDE_DIR)/libdvfs
+	/usr/bin/install -m 0655 dvfs_error.h $(INCLUDE_DIR)/libdvfs
 	/usr/bin/install -m 0655 libdvfs.h $(INCLUDE_DIR)/libdvfs
 
 uninstall:
