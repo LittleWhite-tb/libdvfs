@@ -1,0 +1,19 @@
+var searchData=
+[
+  ['dvfs_5ferror_5fbuffer_5ftoo_5fshort',['DVFS_ERROR_BUFFER_TOO_SHORT',['../dvfs__error_8h.html#a5b1ebd7c2a37c1bb25c2d8f2450ec6db',1,'dvfs_error.h']]],
+  ['dvfs_5ferror_5fcore_5funit_5fmismatch',['DVFS_ERROR_CORE_UNIT_MISMATCH',['../dvfs__error_8h.html#a4ef949ad2542a1ba5bc9382eee72ceac',1,'dvfs_error.h']]],
+  ['dvfs_5ferror_5ffile_5ferror',['DVFS_ERROR_FILE_ERROR',['../dvfs__error_8h.html#ac0c670dfb5d452026a4167eb381a165e',1,'dvfs_error.h']]],
+  ['dvfs_5ferror_5finvalid_5farg',['DVFS_ERROR_INVALID_ARG',['../dvfs__error_8h.html#a4f0ea67aef953fea07932a5bed51877a',1,'dvfs_error.h']]],
+  ['dvfs_5ferror_5finvalid_5fcore_5fid',['DVFS_ERROR_INVALID_CORE_ID',['../dvfs__error_8h.html#ab60b70c146e185e95085dc29d4f51386',1,'dvfs_error.h']]],
+  ['dvfs_5ferror_5finvalid_5ffreq',['DVFS_ERROR_INVALID_FREQ',['../dvfs__error_8h.html#ae0c7f85cf7e97788513cd9a2daecd567',1,'dvfs_error.h']]],
+  ['dvfs_5ferror_5finvalid_5ffreq_5fid',['DVFS_ERROR_INVALID_FREQ_ID',['../dvfs__error_8h.html#aa6f9501401b2fac0fe2330be3fc2d7ed',1,'dvfs_error.h']]],
+  ['dvfs_5ferror_5finvalid_5findex',['DVFS_ERROR_INVALID_INDEX',['../dvfs__error_8h.html#a0a52ac1f26b235db2013e6f12ab4b2fe',1,'dvfs_error.h']]],
+  ['dvfs_5ferror_5fmem_5falloc_5ffailed',['DVFS_ERROR_MEM_ALLOC_FAILED',['../dvfs__error_8h.html#a0faf18f6479f0ac5c2c9df7972b6caf5',1,'dvfs_error.h']]],
+  ['dvfs_5ferror_5frelated_5fcore_5funavailable',['DVFS_ERROR_RELATED_CORE_UNAVAILABLE',['../dvfs__error_8h.html#af923979473b11a4e5f5f9cd15626a7df',1,'dvfs_error.h']]],
+  ['dvfs_5ferror_5fsemaphore_5ffailure',['DVFS_ERROR_SEMAPHORE_FAILURE',['../dvfs__error_8h.html#a7018e91e44a44ece545951358589f833',1,'dvfs_error.h']]],
+  ['dvfs_5ferror_5fset_5ffreq_5ffile',['DVFS_ERROR_SET_FREQ_FILE',['../dvfs__error_8h.html#acdf61f3a52681f1b368e08d52084b544',1,'dvfs_error.h']]],
+  ['dvfs_5ferror_5funknown',['DVFS_ERROR_UNKNOWN',['../dvfs__error_8h.html#a761bef6d70629d9e7a468569d9bc64ec',1,'dvfs_error.h']]],
+  ['dvfs_5fsuccess',['DVFS_SUCCESS',['../dvfs__error_8h.html#a156a11f3a74a83f72d4de83454c482a8',1,'dvfs_error.h']]],
+  ['dvfs_5ftb_5favailable',['DVFS_TB_AVAILABLE',['../dvfs__context_8h.html#a88da41dce80cdb23a6bc38bdba242fda',1,'dvfs_context.h']]],
+  ['dvfs_5ftb_5funavailable',['DVFS_TB_UNAVAILABLE',['../dvfs__context_8h.html#a2bc7095d3f69c0cce6583671e5c95a14',1,'dvfs_context.h']]]
+];
