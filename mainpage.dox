@@ -34,7 +34,7 @@
 
   You can install the library using \c make \c install. Moreover, you can set the following environment variables \c PREFIX, \c INCLUDE_DIR and \c LIB_DIR to modify where the library will be installed.
 
-  \warning In order to be able to control the frequencies, you need to be able to write to various files (\c cpufreq_setspeed, \c cpufreq_governor) in \c /sys/devices/system/cpu*\htmlonly\endhtmlonly/cpu/cpufreq/ and to read in most of the other files within the same directory.
+  \warning In order to be able to control the frequencies, you need to be able to write to various files (\c scaling_setspeed, \c scaling_governor) in \c /sys/devices/system/cpu/cpu*\htmlonly\endhtmlonly/cpufreq/ and to read in most of the other files within the same directory.
 
   \section sec_ex Example
 
